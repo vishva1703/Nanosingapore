@@ -29,6 +29,9 @@ export default function RootLayout() {
 <Stack.Screen name="stopinggoalscreen" options={{ headerShown: false }} />
 <Stack.Screen name="accomplishscreen" options={{ headerShown: false }} />
 <Stack.Screen name="potentialscreen" options={{ headerShown: false }} />
+<Stack.Screen name="greatingscreen" options={{ headerShown: false }} />
+<Stack.Screen name="planscreen" options={{ headerShown: false }} />
+<Stack.Screen name="loginscreen" options={{ headerShown: false }} />
 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>

@@ -150,123 +150,136 @@ export default function HeightWeightScreen() {
   }, []);
 
   /** ✅ FIXED Vertical Picker **/
-  const VerticalPicker = React.memo(function VerticalPicker({
-    label,
-    value,
-    options,
-    onSelect,
-    displayFn,
-    style,
-  }: {
-    label: string;
-    value: number;
-    options: number[];
-    onSelect: (val: number) => void;
-    displayFn: (item: number) => string;
-    style?: any;
-  }) {
-    const scrollY = useRef(new Animated.Value(0)).current;
-    const listRef = useRef<FlatList>(null);
+/** ✅ Updated VerticalPicker matching BirthDateScreen style **/
+const VerticalPicker = React.memo(function VerticalPicker({
+  label,
+  value,
+  options,
+  onSelect,
+  displayFn,
+  style,
+}: {
+  label: string;
+  value: number;
+  options: number[];
+  onSelect: (val: number) => void;
+  displayFn: (item: number) => string;
+  style?: any;
+}) {
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const listRef = useRef<FlatList>(null);
 
-    useEffect(() => {
-      if (!listRef.current || options.length === 0) return;
-      const targetIndex = Math.max(0, options.indexOf(value));
-      if (targetIndex >= 0) {
-        listRef.current.scrollToOffset({
-          offset: targetIndex * ITEM_HEIGHT,
-          animated: false,
-        });
-      }
-    }, [options, value]);
+  useEffect(() => {
+    if (!listRef.current || options.length === 0) return;
 
-    return (
-      <View style={[{ flex: 1, alignItems: 'center' }, style]}>
-        {label ? <Text style={styles.selectorLabel}>{label}</Text> : null}
+    let index = options.indexOf(value);
+    if (index === -1) index = 0;
 
-        <View style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, width: '100%', alignItems: 'center' }}>
-          {/* Center box highlight */}
-          <View
-            style={{
-              position: 'absolute',
-              top: (ITEM_HEIGHT * VISIBLE_ITEMS) / 2 - ITEM_HEIGHT / 2,
-              width: '90%',
-              height: ITEM_HEIGHT,
-              backgroundColor: 'rgba(0,0,0,0.05)',
-              borderRadius: 8,
-              zIndex: 2,
-            }}
-          />
+    listRef.current.scrollToOffset({
+      offset: index * ITEM_HEIGHT,
+      animated: false,
+    });
+  }, [options, value]);
 
-          <Animated.FlatList
-            ref={listRef}
-            data={options}
-            keyExtractor={(item) => item.toString()}
-            showsVerticalScrollIndicator={false}
-            snapToInterval={ITEM_HEIGHT}
-            decelerationRate="fast"
-            bounces={false}
-            getItemLayout={(_, index) => ({
-              length: ITEM_HEIGHT,
-              offset: ITEM_HEIGHT * index,
-              index,
-            })}
-            onMomentumScrollEnd={(e) => {
-              const offsetY = e.nativeEvent.contentOffset.y;
-              const index = Math.round(offsetY / ITEM_HEIGHT);
-              const safeIndex = clamp(index, 0, options.length - 1);
-              const selected = options[safeIndex];
-              if (typeof selected === 'number' && selected !== value) {
-                onSelect(selected);
-              }
-            }}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
-            )}
-            renderItem={({ item, index }) => {
-              const inputRange = [
-                (index - 2) * ITEM_HEIGHT,
-                (index - 1) * ITEM_HEIGHT,
-                index * ITEM_HEIGHT,
-                (index + 1) * ITEM_HEIGHT,
-                (index + 2) * ITEM_HEIGHT,
-              ];
-            
-              // make center value bold black only when it aligns with the middle box
-              const color = scrollY.interpolate({
-                inputRange,
-                outputRange: ['#9CA3AF', '#6B7280', '#000000', '#6B7280', '#9CA3AF'],
-                extrapolate: 'clamp',
-              });
-            
-              const scale = scrollY.interpolate({
-                inputRange,
-                outputRange: [0.9, 0.95, 1, 0.95, 0.9],
-                extrapolate: 'clamp',
-              });
-            
-              return (
-                <Animated.View
-                  style={[styles.itemContainer, { transform: [{ scale }] }]}
+  const onScrollEnd = (e: any) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    const safeIndex = clamp(index, 0, options.length - 1);
+    const selected = options[safeIndex];
+    if (typeof selected === 'number' && selected !== value) {
+      onSelect(selected);
+    }
+  };
+
+  return (
+    <View style={[{ flex: 1, alignItems: 'center', width: '100%' }, style]}>
+      {label ? <Text style={styles.selectorLabel}>{label}</Text> : null}
+
+      <View
+        style={{
+          position: 'relative',
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: ITEM_HEIGHT * VISIBLE_ITEMS,
+        }}
+      >
+        {/* Highlight Box */}
+        <View
+          style={{
+            position: 'absolute',
+            top: (ITEM_HEIGHT * VISIBLE_ITEMS) / 2 - ITEM_HEIGHT / 2,
+            width: '100%',
+            height: ITEM_HEIGHT,
+            backgroundColor: 'rgba(0,0,0,0.05)',
+            borderRadius: 10,
+            zIndex: 2,
+          }}
+        />
+
+        <Animated.FlatList
+          ref={listRef}
+          data={options}
+          keyExtractor={(item) => item.toString()}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          decelerationRate="fast"
+          bounces={false}
+          contentContainerStyle={{
+            paddingVertical: (ITEM_HEIGHT * (VISIBLE_ITEMS - 1)) / 2,
+          }}
+          getItemLayout={(_, index) => ({
+            length: ITEM_HEIGHT,
+            offset: ITEM_HEIGHT * index,
+            index,
+          })}
+          onMomentumScrollEnd={onScrollEnd}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          renderItem={({ item, index }) => {
+            const inputRange = [
+              (index - 2) * ITEM_HEIGHT,
+              (index - 1) * ITEM_HEIGHT,
+              index * ITEM_HEIGHT,
+              (index + 1) * ITEM_HEIGHT,
+              (index + 2) * ITEM_HEIGHT,
+            ];
+
+            const opacity = scrollY.interpolate({
+              inputRange,
+              outputRange: [0.2, 0.5, 1, 0.5, 0.2],
+              extrapolate: 'clamp',
+            });
+
+            const scale = scrollY.interpolate({
+              inputRange,
+              outputRange: [0.9, 0.95, 1.1, 0.95, 0.9],
+              extrapolate: 'clamp',
+            });
+
+            return (
+              <Animated.View
+                style={[styles.itemContainer, { opacity, transform: [{ scale }] }]}
+              >
+                <Text
+                  style={[
+                    styles.itemText,
+                    item === value && styles.selectedItemText,
+                  ]}
                 >
-                  <Animated.Text
-                    style={[
-                      styles.itemText,
-                      { color }, // 👈 dynamic color from animation
-                      item === value && { fontWeight: '700' }, // bold for selected
-                    ]}
-                  >
-                    {displayFn(item)}
-                  </Animated.Text>
-                </Animated.View>
-              );
-            }}
-            
-          />
-        </View>
+                  {displayFn(item)}
+                </Text>
+              </Animated.View>
+            );
+          }}
+        />
       </View>
-    );
-  });
+    </View>
+  );
+});
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -352,15 +365,26 @@ export default function HeightWeightScreen() {
           />
         </View>
 
-        {/* Bottom Button */}
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[styles.primaryCta, { opacity: 1 }]}
-            onPress={() => router.replace('/birth-date')}
-          >
-            <Text style={styles.primaryCtaText}>Next</Text>
-          </TouchableOpacity>
-        </View>
+        // Inside your HeightWeightScreen component, replace the bottom button section:
+
+<View style={styles.bottomContainer}>
+  <TouchableOpacity
+    style={[styles.primaryCta, { opacity: 1 }]}
+    onPress={() => {
+      const heightInMeters = height / 100; // cm → m
+      const idealWeight = Math.round(22 * heightInMeters * heightInMeters); // BMI = 22 formula
+
+      // Pass the ideal weight to next screen
+      router.push({
+        pathname: "/birth-date",
+        params: { idealWeight: idealWeight.toString() },
+      });
+    }}
+  >
+    <Text style={styles.primaryCtaText}>Next</Text>
+  </TouchableOpacity>
+</View>
+
       </View>
     </SafeAreaView>
   );
@@ -428,13 +452,18 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 18,
+    color: '#9CA3AF',
     textAlign: 'center',
+    flexWrap: 'nowrap',
+    includeFontPadding: false,
+    letterSpacing: 0.2,
+    width: '100%', // ✅ ensures months like “September” fit nicely
   },
-  
   selectedItemText: {
-    color: '#000000', // Bold black for selected
+    color: '#000000',
     fontWeight: '700',
-  },
+    fontSize: 14, // optional: make selected a bit larger
+  },      
   
   unselectedItemText: {
     color: '#9CA3AF', // Grey for others

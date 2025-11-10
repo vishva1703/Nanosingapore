@@ -22,7 +22,7 @@ export default function FastGoalScreen() {
   const [currentWeight, setCurrentWeight] = useState(0.8);
 
   // 🔹 Static header progress (e.g. step 2 of 4)
-  const headerProgress = 0.5; // fixed value (50%)
+  const headerProgress = 0.75; // fixed value (50%)
 
   return (
     <SafeAreaView style={styles.safeArea}>

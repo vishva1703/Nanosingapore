@@ -26,14 +26,18 @@ const CHART_WIDTH = CARD_WIDTH - 48; // Inner SVG width
 const CHART_HEIGHT = 160;
 
 // Chart curve points
+// Chart curve points (adjusted for smoother real-life curve)
 const chartPoints = [
-  { x: 0, y: 120 },
-  { x: CHART_WIDTH * 0.15, y: 105 },
-  { x: CHART_WIDTH * 0.35, y: 80 },
-  { x: CHART_WIDTH * 0.55, y: 95 },
-  { x: CHART_WIDTH * 0.75, y: 60 },
-  { x: CHART_WIDTH, y: 40 }, // END of curve (trophy anchor)
-];
+    { x: 0, y: CHART_HEIGHT * 0.80 }, // Start between 1st & 2nd line
+    { x: CHART_WIDTH * 0.15, y: CHART_HEIGHT * 0.78 }, // Slight rise
+    { x: CHART_WIDTH * 0.25, y: CHART_HEIGHT * 0.78 }, // Stable small flat zone
+    { x: CHART_WIDTH * 0.40, y: CHART_HEIGHT * 0.60 }, // Rise to near 4th line
+    { x: CHART_WIDTH * 0.50, y: CHART_HEIGHT * 0.58 }, // Small stabilization
+    { x: CHART_WIDTH * 0.70, y: CHART_HEIGHT * 0.40 }, // Another rise
+    { x: CHART_WIDTH * 0.80, y: CHART_HEIGHT * 0.38 }, // Small flat near top
+    { x: CHART_WIDTH, y: CHART_HEIGHT * 0.25 }, // Final rise → trophy
+  ];
+  
 
 // Smooth curve path generator
 function createSmoothCurve(points) {
@@ -52,7 +56,7 @@ const growthLabels = ["2 Days", "5 Days", "7 Days", "30 Days"];
 
 export default function PotentialScreen() {
   const router = useRouter();
-  const headerProgress = 0.55;
+  const headerProgress = 0.85;
 
   const curvedPath = React.useMemo(() => createSmoothCurve(chartPoints), []);
   const filledPath = `${curvedPath} L ${CHART_WIDTH},${CHART_HEIGHT} L 0,${CHART_HEIGHT} Z`;
@@ -90,7 +94,7 @@ export default function PotentialScreen() {
         <View style={styles.content}>
           <Text style={styles.mainText}>
             You have great potential to{" "}
-            <Text style={styles.highlightText}>crush your goal</Text>
+            <Text >crush your goal</Text>
           </Text>
           <Text style={styles.subText}>
             This will be used to calibrate your custom plan.
@@ -168,7 +172,7 @@ export default function PotentialScreen() {
           <TouchableOpacity
             style={styles.primaryCta}
             activeOpacity={0.85}
-            onPress={() => router.push("/dietscreen")}
+            onPress={() => router.push("/greatingscreen")}
           >
             <Text style={styles.primaryCtaText}>Next</Text>
           </TouchableOpacity>
@@ -182,12 +186,11 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F9FAFB" },
   wrapper: { flex: 1 },
   headerContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     backgroundColor: "#F9FAFB",
   },
-  headerRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   backButton: {
     width: 40,
     height: 40,
@@ -200,8 +203,8 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#E5E7EB",
     overflow: "hidden",
   },
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
   highlightText: { color: "#4B3AAC" },
   subText: { fontSize: 15, color: "#6B7280", lineHeight: 22 },
   card: {
-    marginTop: 24,
+    marginTop: 90,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     paddingHorizontal: 24,

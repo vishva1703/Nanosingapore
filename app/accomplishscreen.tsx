@@ -32,7 +32,7 @@ const DIET_OPTIONS: ReadonlyArray<{
 export default function AccomplishScreen() {
     const router = useRouter();
     const [selectedDiet, setSelectedDiet] = useState<string | null>(null);
-    const progress = useMemo(() => 0.65, []); // Example: 25% progress
+    const progress = useMemo(() => 0.80, []); // Example: 25% progress
 
     return (
         <SafeAreaView style={styles.safeArea}>
