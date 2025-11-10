@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "icon": "./assets/images/logo.png",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#E6F4FE"
+        }
+      ]
+    ]
+  }
+}
