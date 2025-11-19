@@ -149,8 +149,7 @@ export default function HeightWeightScreen() {
     setUnit((prev) => (prev === 'imperial' ? 'metric' : 'imperial'));
   }, []);
 
-  /** ✅ FIXED Vertical Picker **/
-/** ✅ Updated VerticalPicker matching BirthDateScreen style **/
+
 const VerticalPicker = React.memo(function VerticalPicker({
   label,
   value,
@@ -204,7 +203,7 @@ const VerticalPicker = React.memo(function VerticalPicker({
           height: ITEM_HEIGHT * VISIBLE_ITEMS,
         }}
       >
-        {/* Highlight Box */}
+
         <View
           style={{
             position: 'absolute',
@@ -284,7 +283,6 @@ const VerticalPicker = React.memo(function VerticalPicker({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
-        {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -297,7 +295,7 @@ const VerticalPicker = React.memo(function VerticalPicker({
           </View>
         </View>
 
-        {/* Title */}
+
         <View style={styles.titleContainer}>
           <Text style={styles.sectionLabel}>What’s your height and weight?</Text>
           <Text style={styles.helperText}>
@@ -305,7 +303,7 @@ const VerticalPicker = React.memo(function VerticalPicker({
           </Text>
         </View>
 
-        {/* Unit Toggle */}
+
         <View style={styles.switchContainer}>
           <Text style={[styles.switchLabel, unit === 'imperial' ? styles.switchActive : undefined]}>
             Imperial
@@ -321,7 +319,6 @@ const VerticalPicker = React.memo(function VerticalPicker({
           </Text>
         </View>
 
-        {/* Height + Weight */}
         <View style={styles.horizontalRow}>
           {unit === 'metric' ? (
             <VerticalPicker
@@ -365,16 +362,14 @@ const VerticalPicker = React.memo(function VerticalPicker({
           />
         </View>
 
-        // Inside your HeightWeightScreen component, replace the bottom button section:
 
 <View style={styles.bottomContainer}>
   <TouchableOpacity
     style={[styles.primaryCta, { opacity: 1 }]}
     onPress={() => {
-      const heightInMeters = height / 100; // cm → m
-      const idealWeight = Math.round(22 * heightInMeters * heightInMeters); // BMI = 22 formula
+      const heightInMeters = height / 100; 
+      const idealWeight = Math.round(22 * heightInMeters * heightInMeters); 
 
-      // Pass the ideal weight to next screen
       router.push({
         pathname: "/birth-date",
         params: { idealWeight: idealWeight.toString() },
@@ -457,16 +452,16 @@ const styles = StyleSheet.create({
     flexWrap: 'nowrap',
     includeFontPadding: false,
     letterSpacing: 0.2,
-    width: '100%', // ✅ ensures months like “September” fit nicely
+    width: '100%',
   },
   selectedItemText: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: 14, // optional: make selected a bit larger
+    fontSize: 14, 
   },      
   
   unselectedItemText: {
-    color: '#9CA3AF', // Grey for others
+    color: '#9CA3AF', 
     fontWeight: '400',
   },
   

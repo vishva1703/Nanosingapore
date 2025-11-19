@@ -1,16 +1,15 @@
+import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
   Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { AntDesign } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -33,18 +32,28 @@ export default function CreateAccountScreen() {
                     </View>
                 </View>
         {/* Title */}
-        <Text style={styles.title}>Create an account</Text>
+        <View style={styles.section}> 
+                 <Text style={styles.title}>Create an account</Text>
+</View>
 
         {/* Buttons */}
         <View style={styles.buttonContainer}>
           {/* Apple Sign-in */}
-          <TouchableOpacity style={styles.outlinedButton} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.outlinedButton}
+            activeOpacity={0.85}
+            onPress={() => router.push('/(tabs)')}
+          >
           <AntDesign name="apple" size={24} color="black" />
             <Text style={styles.outlinedButtonText}>Sign in with Apple</Text>
           </TouchableOpacity>
 
           {/* Google Sign-in */}
-          <TouchableOpacity style={styles.outlinedButton} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.outlinedButton}
+            activeOpacity={0.85}
+            onPress={() => router.push('/(tabs)')}
+          >
           <Image source={require("../assets/images/google-logo.png")} style={{ width: 18, height: 18 }} />
 
             <Text style={styles.outlinedButtonText}>Sign in with Google</Text>
@@ -106,16 +115,21 @@ progressTrack: {
   },
 
   // Title
+  section: {
+    marginBottom: 8,
+  },
   title: {
+    marginBottom: 8,
     fontSize: 26,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 250
+    fontWeight: '700',
+    color: '#111827',
+    marginLeft: 30,
   },
 
   // Buttons
   buttonContainer: {
-    gap: 16,
+    marginTop: 200,
+    gap: 20,
   },
   outlinedButton: {
     flexDirection: "row",
@@ -127,6 +141,8 @@ progressTrack: {
     paddingVertical: 14,
     gap: 10,
     backgroundColor: "#FFFFFF",
+    marginLeft: 30,
+    marginRight: 30,
   },
   outlinedButtonText: {
     fontSize: 15,

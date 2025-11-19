@@ -11,7 +11,7 @@ export default function WelcomeScreen() {
   };
 
   const handleAlreadyAccount = () => {
-    router.push('/modal');
+    router.push('/loginscreen');
   };
 
   return (
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   bottomSheet: {
-    backgroundColor: 'rgba(75, 58, 172, 0.92)',
+    backgroundColor: '#4b3aac',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 32,

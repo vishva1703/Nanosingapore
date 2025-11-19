@@ -2,14 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Animated,
-  FlatList,
   Dimensions,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -207,17 +206,18 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
-    gap: 28,
+    paddingTop: 0,
     paddingBottom: 120,
+    gap: 28,
   },
   section: {
     marginBottom: 8,
   },
   sectionLabel: {
+    marginBottom: 8,
     fontSize: 26,
-    fontWeight: "700",
-    color: "#111827",
+    fontWeight: '700',
+    color: '#111827',
   },
   helperText: {
     fontSize: 15,

@@ -214,14 +214,15 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingTop: 0,
+    paddingBottom: 120,
     gap: 28,
-    paddingBottom: 120, // space for bottom button
   },
   section: {
     marginBottom: 8,
   },
   sectionLabel: {
+    marginBottom: 8,
     fontSize: 26,
     fontWeight: '700',
     color: '#111827',

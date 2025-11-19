@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
 import React, { useMemo, useState } from 'react';
@@ -10,7 +10,6 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 const DIET_OPTIONS: ReadonlyArray<{
@@ -176,18 +175,19 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: 24,
-        paddingVertical: 32,
-        gap: 28,
+        paddingTop: 0,
         paddingBottom: 120,
-    },
+        gap: 28,
+      },
     section: {
         marginBottom: 8,
     },
     sectionLabel: {
+        marginBottom: 8,
         fontSize: 26,
         fontWeight: '700',
         color: '#111827',
-    },
+      },
     helperText: {
         fontSize: 15,
         color: '#6B7280',

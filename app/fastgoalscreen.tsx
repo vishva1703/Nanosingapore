@@ -1,16 +1,16 @@
+import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import Slider from "@react-native-community/slider";
 
 const { width } = Dimensions.get("window");
 
@@ -51,11 +51,12 @@ export default function FastGoalScreen() {
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
         >
+          <View style={styles.section}>
           <Text style={styles.title}>How fast do you want to reach your Goal?</Text>
           <Text style={styles.subtitle}>
             This will be used to calibrate your custom plan.
           </Text>
-
+</View>
           {/* 🔹 Weight Info */}
           <View style={{ alignItems: "center", marginTop: 40 }}>
             <Text style={styles.helperText}>Lose Weight speed per week</Text>
@@ -106,7 +107,9 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 0,
     paddingBottom: 120,
+    gap: 28,
   },
   headerContainer: {
     paddingHorizontal: 20,
@@ -136,16 +139,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: "#4B3AAC" },
+  
+  section: {
+    marginBottom: 8,
+  },
   title: {
+    marginBottom: 8,
     fontSize: 26,
-    fontWeight: "700",
-    color: "#111827",
-    marginTop: 12,
+    fontWeight: '700',
+    color: '#111827',
   },
   subtitle: {
     fontSize: 15,
     color: "#6B7280",
-    marginTop: 6,
+    marginTop: 2,
     lineHeight: 22,
   },
   helperText: {

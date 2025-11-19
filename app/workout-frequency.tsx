@@ -1,15 +1,14 @@
+import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
 import React, { useMemo, useState } from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -178,19 +177,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: wp('6%'),
+    paddingVertical: hp('2%'),
     backgroundColor: '#F9FAFB',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: wp('2%'),
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
+    width: wp('12%'),
+    height: wp('12%'),
+    borderRadius: wp('6%'),
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
@@ -199,7 +198,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 8,
+    height: hp('1%'),
     borderRadius: 3,
     backgroundColor: '#E5E7EB',
     overflow: 'hidden',
@@ -216,31 +215,32 @@ const styles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    gap: 28,
-    paddingBottom: 120,
+    paddingHorizontal: wp('6%'),
+    paddingTop: 0,
+    paddingBottom: hp('15%'),
+    gap: hp('3.5%'),
   },
   section: {
     marginBottom: 8,
   },
   sectionLabel: {
-    fontSize: 26,
+    marginBottom: 8,
+    fontSize: RFValue(26),
     fontWeight: '700',
     color: '#111827',
   },
   helperText: {
-    fontSize: 15,
+    fontSize: RFValue(15),
     color: '#6B7280',
     marginTop: 4,
     lineHeight: 22,
   },
   optionList: {
-    gap: 14,
+    gap: hp('2%'),
   },
   optionButton: {
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('4%'),
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -257,14 +257,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start', // 👈 align everything to the left
-    gap: 12,
-    paddingLeft: 12, // 👈 gives breathing space from the left edge
+    gap: wp('3%'),
+    paddingLeft: wp('3%'), // 👈 gives breathing space from the left edge
   },
   
   optionIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: wp('10%'),
+    height: wp('10%'),
+    borderRadius: wp('5%'),
     backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '600',
     color: '#1F2937',
   },
@@ -285,13 +285,13 @@ const styles = StyleSheet.create({
   bottomContainer: {
     position: 'absolute',
     bottom: 24,
-    left: 24,
-    right: 24,
+    left: wp('6%'),
+    right: wp('6%'),
   },
   primaryCta: {
     backgroundColor: '#4B3AAC',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: hp('2.2%'),
+    borderRadius: wp('4%'),
     alignItems: 'center',
     shadowColor: '#4B3AAC',
     shadowOpacity: 0.3,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   primaryCtaText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '600',
     letterSpacing: 0.3,
   },

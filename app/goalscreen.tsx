@@ -1,15 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
 import React, { useMemo, useState } from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -149,14 +147,15 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
-    gap: 28,
+    paddingTop: 0,
     paddingBottom: 120,
+    gap: 28,
   },
   section: {
     marginBottom: 8,
   },
   sectionLabel: {
+    marginBottom: 8,
     fontSize: 26,
     fontWeight: '700',
     color: '#111827',

@@ -1,17 +1,17 @@
+import { Ionicons } from "@expo/vector-icons";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { useRouter } from "expo-router";
 import React from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
-import { useRouter } from "expo-router";
-import AntDesign from '@expo/vector-icons/AntDesign';
 
 const { width } = Dimensions.get("window");
 
@@ -200,7 +200,7 @@ progressTrack: {
   centerContent: {
     flex: 1,
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 3,
     paddingHorizontal: 20,
   },
   iconCircle: {

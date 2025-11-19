@@ -13,11 +13,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Defs,
+  G,
+  Line,
   LinearGradient,
   Path,
   Stop,
-  Line,
-  G,
 } from "react-native-svg";
 
 const { width } = Dimensions.get("window");
@@ -92,13 +92,16 @@ export default function PotentialScreen() {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.mainText}>
+          <View style={styles.section}> 
+            <Text style={styles.sectionLabel}>
             You have great potential to{" "}
             <Text >crush your goal</Text>
           </Text>
-          <Text style={styles.subText}>
+          <Text style={styles.helperText}>
             This will be used to calibrate your custom plan.
           </Text>
+          </View>
+         
 
           {/* Chart Card */}
           <View style={styles.card}>
@@ -209,17 +212,29 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: "#4B3AAC" },
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 24 },
-  mainText: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#111827",
-    lineHeight: 34,
+  content: { 
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    paddingBottom: 120,
+    gap: 28,
+   },
+   section: {
     marginBottom: 8,
   },
-  highlightText: { color: "#4B3AAC" },
-  subText: { fontSize: 15, color: "#6B7280", lineHeight: 22 },
-  card: {
+  sectionLabel: {
+    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  helperText: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginTop: 4,
+    lineHeight: 22,
+  },
+    card: {
     marginTop: 90,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
