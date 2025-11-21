@@ -4,11 +4,13 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function WeightChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-
+  const router = useRouter();
+  
   // Generate date range based on currentWeekOffset
   const getDateRange = () => {
     const today = new Date();
@@ -21,10 +23,11 @@ export default function WeightChart() {
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return ` ${months[date.getMonth()]} ${date.getDate()}`;
     };
+   
 
     return {
       start: formatDate(startDate),
-      end: formatDate(endDate),
+      end: formatDate(endDate),   
       startDate,
       endDate,
     };
@@ -224,6 +227,7 @@ export default function WeightChart() {
               paddingHorizontal: wp('5%'),
               borderRadius: wp('8%'),
             }}
+            onPress={() => {router.push(  '/screen1/profile/weightScreen')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log weight

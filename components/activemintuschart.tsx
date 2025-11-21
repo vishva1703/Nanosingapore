@@ -4,11 +4,12 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function ActiveMinutesChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-
+  const router = useRouter();
   // Generate year based on currentWeekOffset
   const getYear = () => {
     const today = new Date();
@@ -178,6 +179,7 @@ export default function ActiveMinutesChart() {
               paddingHorizontal: wp('5%'),
               borderRadius: wp('8%'),
             }}
+            onPress={()=> {router.push ('/screen1/profile/logactivity')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log activity

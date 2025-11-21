@@ -32,6 +32,7 @@ export default function OnboardingScreen() {
   const progress = useMemo(() => getProgressForScreen('onboarding'), []);
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
@@ -66,57 +67,83 @@ export default function OnboardingScreen() {
           </View>
         </View>
 
-        {/* Content starts below the header */}
-        <ScrollView
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
-        >
-          {!isFromSettings && (
-            <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Choose your Gender</Text>
-            <Text style={styles.helperText}>
-              This will be used to calibrate your custom plan.
-            </Text>
-          </View>
-          )}
-
-          <View style={styles.optionList}>
-            {GENDERS.map((gender) => (
-              <TouchableOpacity
-                key={gender}
-                style={[
-                  styles.optionButton,
-                  selectedGender === gender && styles.selectedOption,
-                ]}
-                onPress={() => setSelectedGender(gender)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedGender === gender && styles.selectedOptionText,
-                  ]}
-                >
-                  {gender}
+        {/* Content Container */}
+        <View style={[
+          styles.contentContainer,
+          isFromSettings && styles.centeredContent
+        ]}>
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              isFromSettings && styles.centeredScrollContent
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {!isFromSettings && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Choose your Gender</Text>
+                <Text style={styles.helperText}>
+                  This will be used to calibrate your custom plan.
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+              </View>
+            )}
+
+            <View style={[
+              styles.optionList,
+              isFromSettings && styles.centeredOptionList
+            ]}>
+              {GENDERS.map((gender) => (
+                <TouchableOpacity
+                  key={gender}
+                  style={[
+                    styles.optionButton,
+                    selectedGender === gender && styles.selectedOption,
+                  ]}
+                  onPress={() => setSelectedGender(gender)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedGender === gender && styles.selectedOptionText,
+                    ]}
+                  >
+                    {gender}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
 
         {/* Fixed Continue Button */}
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[
-              styles.primaryCta,
-              !(selectedGender && selectedLanguage) && { opacity: 0.6 },
-            ]}
-            disabled={!selectedGender}
-            onPress={() => router.push('/screens/workout-frequency')}
-          >
-            <Text style={styles.primaryCtaText}>Next</Text>
-          </TouchableOpacity>
-        </View>
+        {!isFromSettings ? (
+          <View style={styles.bottomContainer}>
+            <TouchableOpacity
+              style={[
+                styles.primaryCta,
+                !(selectedGender && selectedLanguage) && { opacity: 0.6 },
+              ]}
+              disabled={!selectedGender}
+              onPress={() => router.push('/screens/workout-frequency')}
+            >
+              <Text style={styles.primaryCtaText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.settingsBottomContainer}>
+            <TouchableOpacity
+              style={[
+                styles.primaryCta,
+                !selectedGender && { opacity: 0.6 },
+              ]}
+              disabled={!selectedGender}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.primaryCtaText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Language Modal */}
@@ -223,14 +250,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
 
-  /** MAIN CONTENT **/
-  container: {
+  /** CONTENT CONTAINER **/
+  contentContainer: {
+    flex: 1,
+  },
+  centeredContent: {
+    justifyContent: 'center',
+  },
+  
+  scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 0,
     paddingBottom: 120,
     gap: 28,
   },
+  centeredScrollContent: {
+    justifyContent: 'center',
+    paddingBottom: 100, // Space for bottom button
+  },
+
   section: {
     marginBottom: 8,
   },
@@ -248,6 +287,9 @@ const styles = StyleSheet.create({
   },
   optionList: {
     gap: 14,
+  },
+  centeredOptionList: {
+    marginTop: 0,
   },
   optionButton: {
     paddingVertical: 16,
@@ -280,6 +322,13 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 24,
     right: 24,
+  },
+  settingsBottomContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#F9FAFB',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
   primaryCta: {
     backgroundColor: '#4B3AAC',

@@ -304,93 +304,113 @@ export default function HeightWeightScreen() {
           </View>
         </View>
 
-
-        {!isFromSettings &&  (
-          <View style={styles.titleContainer}>
-          <Text style={styles.sectionLabel}>What’s your height and weight?</Text>
-          <Text style={styles.helperText}>
-            This will be used to calculate your custom plan.
-          </Text>
-        </View>
-        )}
-
-
-        <View style={styles.switchContainer}>
-          <Text style={[styles.switchLabel, unit === 'imperial' ? styles.switchActive : undefined]}>
-            Imperial
-          </Text>
-          <Switch
-            value={unit === 'metric'}
-            onValueChange={toggleUnit}
-            trackColor={{ false: '#D1D5DB', true: '#C7D2FE' }}
-            thumbColor={unit === 'metric' ? '#4B3AAC' : '#FFFFFF'}
-          />
-          <Text style={[styles.switchLabel, unit === 'metric' ? styles.switchActive : undefined]}>
-            Metric
-          </Text>
-        </View>
-
-        <View style={styles.horizontalRow}>
-          {unit === 'metric' ? (
-            <VerticalPicker
-              label="Height"
-              value={height}
-              options={heightOptionsMetric}
-              onSelect={handleMetricHeightSelect}
-              displayFn={(item) => `${item} cm`}
-            />
-          ) : (
-            <View style={{ flex: 1 }}>
-              <Text style={styles.selectorLabel}>Height</Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <VerticalPicker
-                  label=""
-                  value={heightFt}
-                  options={feetOptions}
-                  onSelect={handleFeetSelect}
-                  displayFn={(item) => `${item} ft`}
-                  style={{ flex: 1, marginRight: 8 }}
-                />
-                <VerticalPicker
-                  label=""
-                  value={heightIn}
-                  options={inchOptions}
-                  onSelect={handleInchesSelect}
-                  displayFn={(item) => `${item} in`}
-                  style={{ flex: 1, marginLeft: 8 }}
-                />
-              </View>
+        {/* Main Content Container */}
+        <View style={[
+          styles.contentContainer,
+          isFromSettings && styles.centeredContent
+        ]}>
+          {!isFromSettings && (
+            <View style={styles.titleContainer}>
+              <Text style={styles.sectionLabel}>What's your height and weight?</Text>
+              <Text style={styles.helperText}>
+                This will be used to calculate your custom plan.
+              </Text>
             </View>
           )}
 
-          <View style={{ width: 16 }} />
-          <VerticalPicker
-            label="Weight"
-            value={weight}
-            options={weightOptions}
-            onSelect={unit === 'metric' ? handleMetricWeightSelect : handleImperialWeightSelect}
-            displayFn={(item) => (unit === 'metric' ? `${item} kg` : `${item} lb`)}
-          />
+          <View style={[
+            styles.switchContainer,
+            isFromSettings && styles.centeredSwitchContainer
+          ]}>
+            <Text style={[styles.switchLabel, unit === 'imperial' ? styles.switchActive : undefined]}>
+              Imperial
+            </Text>
+            <Switch
+              value={unit === 'metric'}
+              onValueChange={toggleUnit}
+              trackColor={{ false: '#D1D5DB', true: '#C7D2FE' }}
+              thumbColor={unit === 'metric' ? '#4B3AAC' : '#FFFFFF'}
+            />
+            <Text style={[styles.switchLabel, unit === 'metric' ? styles.switchActive : undefined]}>
+              Metric
+            </Text>
+          </View>
+
+          <View style={[
+            styles.horizontalRow,
+            isFromSettings && styles.centeredHorizontalRow
+          ]}>
+            {unit === 'metric' ? (
+              <VerticalPicker
+                label="Height"
+                value={height}
+                options={heightOptionsMetric}
+                onSelect={handleMetricHeightSelect}
+                displayFn={(item) => `${item} cm`}
+              />
+            ) : (
+              <View style={{ flex: 1 }}>
+                <Text style={styles.selectorLabel}>Height</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <VerticalPicker
+                    label=""
+                    value={heightFt}
+                    options={feetOptions}
+                    onSelect={handleFeetSelect}
+                    displayFn={(item) => `${item} ft`}
+                    style={{ flex: 1, marginRight: 8 }}
+                  />
+                  <VerticalPicker
+                    label=""
+                    value={heightIn}
+                    options={inchOptions}
+                    onSelect={handleInchesSelect}
+                    displayFn={(item) => `${item} in`}
+                    style={{ flex: 1, marginLeft: 8 }}
+                  />
+                </View>
+              </View>
+            )}
+
+            <View style={{ width: 16 }} />
+            <VerticalPicker
+              label="Weight"
+              value={weight}
+              options={weightOptions}
+              onSelect={unit === 'metric' ? handleMetricWeightSelect : handleImperialWeightSelect}
+              displayFn={(item) => (unit === 'metric' ? `${item} kg` : `${item} lb`)}
+            />
+          </View>
         </View>
 
+        {/* Bottom Button - Conditionally positioned */}
+        {!isFromSettings ? (
+          <View style={styles.bottomContainer}>
+            <TouchableOpacity
+              style={[styles.primaryCta, { opacity: 1 }]}
+              onPress={() => {
+                const heightInMeters = height / 100;
+                const idealWeight = Math.round(22 * heightInMeters * heightInMeters);
 
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[styles.primaryCta, { opacity: 1 }]}
-            onPress={() => {
-              const heightInMeters = height / 100;
-              const idealWeight = Math.round(22 * heightInMeters * heightInMeters);
-
-              router.push({
-                pathname: "/screens/birth-date",
-                params: { idealWeight: idealWeight.toString(), form: "weight" },
-              });
-            }}
-          >
-            <Text style={styles.primaryCtaText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-
+                router.push({
+                  pathname: "/screens/birth-date",
+                  params: { idealWeight: idealWeight.toString(), form: "weight" },
+                });
+              }}
+            >
+              <Text style={styles.primaryCtaText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.settingsBottomContainer}>
+            <TouchableOpacity
+              style={[styles.primaryCta, { opacity: 1 }]}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.primaryCtaText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -400,8 +420,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
   wrapper: { flex: 1 },
 
-  headerContainer: { paddingHorizontal: 24, paddingVertical: 16 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerContainer: { 
+    paddingHorizontal: 24, 
+    paddingVertical: 16,
+    paddingBottom: 16,
+  },
+  headerRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8 
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -419,11 +447,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
     overflow: 'hidden',
   },
-  progressFill: { height: '100%', backgroundColor: '#4B3AAC' },
+  progressFill: { 
+    height: '100%', 
+    backgroundColor: '#4B3AAC' 
+  },
 
-  titleContainer: { paddingHorizontal: 24, marginBottom: 16 },
-  sectionLabel: { fontSize: 26, fontWeight: '700', color: '#111827' },
-  helperText: { fontSize: 15, color: '#6B7280', lineHeight: 22, marginTop: 4 },
+  // Content container styles
+  contentContainer: {
+    flex: 1,
+  },
+  centeredContent: {
+    justifyContent: 'center',
+    marginBottom: 100, // Add space for the bottom button
+  },
+
+  titleContainer: { 
+    paddingHorizontal: 24, 
+    marginBottom: 16,
+    marginTop: 20,
+  },
+  sectionLabel: { 
+    fontSize: 26, 
+    fontWeight: '700', 
+    color: '#111827' 
+  },
+  helperText: { 
+    fontSize: 15, 
+    color: '#6B7280', 
+    lineHeight: 22, 
+    marginTop: 4 
+  },
 
   switchContainer: {
     flexDirection: 'row',
@@ -433,14 +486,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     paddingVertical: 10,
   },
-  switchLabel: { fontSize: 14, fontWeight: '500', color: '#6B7280' },
-  switchActive: { color: '#111827' },
+  centeredSwitchContainer: {
+    marginTop: 0,
+  },
+  switchLabel: { 
+    fontSize: 14, 
+    fontWeight: '500', 
+    color: '#6B7280' 
+  },
+  switchActive: { 
+    color: '#111827' 
+  },
 
   horizontalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 24,
     marginTop: 24,
+  },
+  centeredHorizontalRow: {
+    marginTop: 0, // Remove top margin when centered
   },
 
   selectorLabel: {
@@ -476,8 +541,20 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
 
-
-  bottomContainer: { position: 'absolute', bottom: 24, left: 24, right: 24 },
+  // Bottom containers
+  bottomContainer: { 
+    position: 'absolute', 
+    bottom: 24, 
+    left: 24, 
+    right: 24 
+  },
+  settingsBottomContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#F9FAFB',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
   primaryCta: {
     backgroundColor: '#4B3AAC',
     paddingVertical: 16,
@@ -488,5 +565,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
-  primaryCtaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', letterSpacing: 0.3 },
+  primaryCtaText: { 
+    color: '#FFFFFF', 
+    fontSize: 16, 
+    fontWeight: '600', 
+    letterSpacing: 0.3 
+  },
 });

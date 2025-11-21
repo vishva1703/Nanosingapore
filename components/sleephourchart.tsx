@@ -1,14 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function SleepHourChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-
+  const router = useRouter();
   // Generate month name based on currentWeekOffset
   const getMonthName = () => {
     const today = new Date();
@@ -196,6 +198,7 @@ export default function SleepHourChart() {
               justifyContent: 'center',
               marginLeft: wp('30%'),
             }}
+            onPress={()=> router.push('/screen1/profile/logsleep')}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log Sleep

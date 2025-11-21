@@ -4,12 +4,13 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { BarChart, LineChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function CalorieIntakeChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
-
+  const router = useRouter();
   // Generate month name based on currentWeekOffset
   const getMonthName = () => {
     const today = new Date();
@@ -252,6 +253,7 @@ export default function CalorieIntakeChart() {
               justifyContent: 'center',
               marginLeft: wp('30%'),
             }}
+            onPress={() => {router.push('/screen1/profile/logcalories')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log Calories

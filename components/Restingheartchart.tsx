@@ -3,11 +3,12 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function RestingHeartChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-
+  const router = useRouter();
   // Generate date range based on currentWeekOffset
   const getDateRange = () => {
     const today = new Date();
@@ -180,6 +181,7 @@ export default function RestingHeartChart() {
               justifyContent: 'center',
               marginLeft: wp('26%'),
             }}
+            onPress={() => {router.push('/screen1/profile/logheartrate')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log RHR

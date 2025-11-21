@@ -1,14 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRoute } from "@react-navigation/native";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function Ketonchart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-
+  const router = useRouter()
   // Generate date range based on currentWeekOffset
   const getMonthName = () => {
     const today = new Date();
@@ -181,6 +183,7 @@ export default function Ketonchart() {
                 justifyContent: 'center',
                 marginLeft: wp('30%'),
             }}
+            onPress={()=> {router.push('/screen1/profile/logketons')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log Ketones

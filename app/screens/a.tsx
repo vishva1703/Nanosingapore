@@ -22,7 +22,7 @@ const END_WEIGHT = 140;
 export default function DesiredWeightScreen() {
   const router = useRouter();
   const [selectedWeight, setSelectedWeight] = useState(48);
-    const progress = useMemo(() => getProgressForScreen('desired'), []);
+  const progress = useMemo(() => getProgressForScreen('desired'), []);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
@@ -34,6 +34,7 @@ export default function DesiredWeightScreen() {
         arr.push({
           value: kg + i / SMALL_TICKS_PER_KG,
           isMajor: i === 0,
+          isFifth: i === 4, // Identify 5th ticks
           index: index++,
         });
       }
@@ -132,8 +133,19 @@ export default function DesiredWeightScreen() {
                   extrapolate: "clamp",
                 });
 
-                // Increased tick heights
-                const height = item.isMajor ? 70 : 35;
+                // Height interpolation for 5th ticks
+                const height = scrollX.interpolate({
+                  inputRange,
+                  outputRange: [
+                    // Default heights when not centered
+                    item.isMajor ? 70 : (item.isFifth ? 45 : 35),
+                    // Height when centered - 5th ticks get extra height
+                    item.isMajor ? 70 : (item.isFifth ? 60 : 35),
+                    // Default heights when not centered
+                    item.isMajor ? 70 : (item.isFifth ? 45 : 35),
+                  ],
+                  extrapolate: "clamp",
+                });
 
                 return (
                   <Animated.View style={styles.tickContainer}>

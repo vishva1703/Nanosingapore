@@ -195,7 +195,7 @@ export default function HeightWeightScreen() {
             style={[styles.primaryCta, { opacity: 1 }]}
             onPress={() => {
               router.push({
-                pathname: "/screen1/profile/saveweight",
+                pathname: "/me",
               });
             }}
           >

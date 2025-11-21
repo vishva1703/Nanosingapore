@@ -234,52 +234,71 @@ export default function BirthDateScreen() {
                     </View>
                 </View>
 
+                {/* Main Content Container */}
+                <View style={[
+                    styles.contentContainer,
+                    isFromSettings && styles.centeredContent
+                ]}>
+                    {!isFromSettings && (
+                        <View style={styles.titleContainer}>
+                            <Text style={styles.sectionLabel}>Where were you born?</Text>
+                            <Text style={styles.helperText}>
+                                This will be used to calibrate your custom plan.
+                            </Text>
+                        </View>
+                    )}
 
-                {!isFromSettings && (
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.sectionLabel}>Where were you born?</Text>
-                        <Text style={styles.helperText}>
-                            This will be used to calibrate your custom plan.
-                        </Text>
+                    <View style={[
+                        styles.horizontalRow,
+                        isFromSettings && styles.centeredHorizontalRow
+                    ]}>
+                        <VerticalPicker
+                            label=""
+                            value={month}
+                            options={monthOptions}
+                            onSelect={handleMonthSelect}
+                            displayFn={(item) => MONTHS[item]}
+                            style={{ flex: 1, marginRight: 8 }}
+                        />
+                        <VerticalPicker
+                            label=""
+                            value={day}
+                            options={dayOptions}
+                            onSelect={handleDaySelect}
+                            displayFn={(item) => String(item).padStart(2, '0')}
+                            style={{ flex: 1, marginHorizontal: 8 }}
+                        />
+                        <VerticalPicker
+                            label=""
+                            value={year}
+                            options={yearOptions}
+                            onSelect={handleYearSelect}
+                            displayFn={(item) => item.toString()}
+                            style={{ flex: 1, marginLeft: 8 }}
+                        />
+                    </View>
+                </View>
+
+                {/* Bottom Button - Conditionally positioned */}
+                {!isFromSettings ? (
+                    <View style={styles.bottomContainer}>
+                        <TouchableOpacity
+                            style={[styles.primaryCta, { opacity: 1 }]}
+                            onPress={() => router.replace('/screens/goalscreen')}
+                        >
+                            <Text style={styles.primaryCtaText}>Next</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.settingsBottomContainer}>
+                        <TouchableOpacity
+                            style={[styles.primaryCta, { opacity: 1 }]}
+                            onPress={() => router.back()}
+                        >
+                            <Text style={styles.primaryCtaText}>Save</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
-
-
-                <View style={styles.horizontalRow}>
-                    <VerticalPicker
-                        label=""
-                        value={month}
-                        options={monthOptions}
-                        onSelect={handleMonthSelect}
-                        displayFn={(item) => MONTHS[item]}
-                        style={{ flex: 1, marginRight: 8 }}
-                    />
-                    <VerticalPicker
-                        label=""
-                        value={day}
-                        options={dayOptions}
-                        onSelect={handleDaySelect}
-                        displayFn={(item) => String(item).padStart(2, '0')}
-                        style={{ flex: 1, marginHorizontal: 8 }}
-                    />
-                    <VerticalPicker
-                        label=""
-                        value={year}
-                        options={yearOptions}
-                        onSelect={handleYearSelect}
-                        displayFn={(item) => item.toString()}
-                        style={{ flex: 1, marginLeft: 8 }}
-                    />
-                </View>
-
-                <View style={styles.bottomContainer}>
-                    <TouchableOpacity
-                        style={[styles.primaryCta, { opacity: 1 }]}
-                        onPress={() => router.replace('/screens/goalscreen')}
-                    >
-                        <Text style={styles.primaryCtaText}>Next</Text>
-                    </TouchableOpacity>
-                </View>
             </View>
         </SafeAreaView>
     );
@@ -288,8 +307,16 @@ export default function BirthDateScreen() {
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
     wrapper: { flex: 1 },
-    headerContainer: { paddingHorizontal: 24, paddingVertical: 16 },
-    headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    headerContainer: { 
+        paddingHorizontal: 24, 
+        paddingVertical: 16,
+        paddingBottom: 16,
+    },
+    headerRow: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        gap: 8 
+    },
     backButton: {
         width: 40,
         height: 40,
@@ -307,17 +334,47 @@ const styles = StyleSheet.create({
         backgroundColor: '#E5E7EB',
         overflow: 'hidden',
     },
-    progressFill: { height: '100%', backgroundColor: '#4B3AAC' },
-    titleContainer: { paddingHorizontal: 24, marginBottom: 16 },
-    sectionLabel: { fontSize: 26, fontWeight: '700', color: '#111827' },
-    helperText: { fontSize: 15, color: '#6B7280', lineHeight: 22, marginTop: 4 },
+    progressFill: { 
+        height: '100%', 
+        backgroundColor: '#4B3AAC' 
+    },
+    
+    // Content container styles
+    contentContainer: {
+        flex: 1,
+    },
+    centeredContent: {
+        justifyContent: 'center',
+        marginBottom: 100, // Add space for the bottom button
+    },
+    
+    titleContainer: { 
+        paddingHorizontal: 24, 
+        marginBottom: 16,
+        marginTop: 20,
+    },
+    sectionLabel: { 
+        fontSize: 26, 
+        fontWeight: '700', 
+        color: '#111827' 
+    },
+    helperText: { 
+        fontSize: 15, 
+        color: '#6B7280', 
+        lineHeight: 22, 
+        marginTop: 4 
+    },
+    
     horizontalRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center', // ✅ center all pickers vertically
-        marginHorizontal: 20, // slightly tighter margins
+        alignItems: 'center',
+        marginHorizontal: 20,
         marginTop: 70,
-        gap: 12, // spacing between columns
+        gap: 12,
+    },
+    centeredHorizontalRow: {
+        marginTop: 0, // Remove top margin when centered
     },
 
     selectorLabel: {
@@ -339,14 +396,28 @@ const styles = StyleSheet.create({
         flexWrap: 'nowrap',
         includeFontPadding: false,
         letterSpacing: 0.2,
-        width: '100%', // ✅ ensures months like “September” fit nicely
+        width: '100%',
     },
     selectedItemText: {
         color: '#000000',
         fontWeight: '700',
-        fontSize: 14, // optional: make selected a bit larger
+        fontSize: 14,
     },
-    bottomContainer: { position: 'absolute', bottom: 24, left: 24, right: 24 },
+    
+    // Bottom containers
+    bottomContainer: { 
+        position: 'absolute', 
+        bottom: 24, 
+        left: 24, 
+        right: 24 
+    },
+    settingsBottomContainer: {
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: '#F9FAFB',
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+    },
     primaryCta: {
         backgroundColor: '#4B3AAC',
         paddingVertical: 16,
@@ -357,7 +428,10 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
     },
-    primaryCtaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', letterSpacing: 0.3 },
+    primaryCtaText: { 
+        color: '#FFFFFF', 
+        fontSize: 16, 
+        fontWeight: '600', 
+        letterSpacing: 0.3 
+    },
 });
-
-

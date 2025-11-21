@@ -4,13 +4,14 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { useRouter } from "expo-router";
 
 export default function GlucoseLevelChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [rangeMin, setRangeMin] = useState(70);
   const [rangeMax, setRangeMax] = useState(90);
-
+  const router = useRouter()
   // Generate month name based on currentWeekOffset
   const getMonthName = () => {
     const today = new Date();
@@ -287,6 +288,7 @@ export default function GlucoseLevelChart() {
                 justifyContent: 'center',
                 marginLeft: wp('30%'),
             }}
+            onPress={() => {router.push ('/screen1/profile/logglucose')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
               Log glucose

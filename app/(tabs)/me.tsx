@@ -129,7 +129,6 @@ export default function MeScreen() {
     };
     // Function to deselect all dates
 
-
     // Function to handle date selection
     const handleDateSelect = (index: number, isFullMonth: boolean = false) => {
         if (isFullMonth) {
@@ -138,7 +137,7 @@ export default function MeScreen() {
             updatedCalendar[index] = {
                 ...updatedCalendar[index],
                 isSelected: !updatedCalendar[index].isSelected,
-                status: updatedCalendar[index].isSelected ? 'empty' : 'empty' // Keep as empty when selected
+                status: updatedCalendar[index].isSelected ? 'empty' : 'empty' 
             };
             setFullMonthCalendar(updatedCalendar);
         } else {
@@ -223,45 +222,133 @@ export default function MeScreen() {
                 {statusCount > 0 && (
                     <View style={styles.segmentedContainer}>
                         <Svg width="100%" height="100%" viewBox="0 0 100 100" style={styles.segmentedSvg}>
-                            {/* Calculate segment angles - each gets 33.33% */}
-                            {hasFasting && (
-                                <Circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    stroke="#4B3AAC" // Purple
-                                    strokeWidth="8"
-                                    fill="none"
-                                    strokeDasharray={`${100 / 3} ${100 - (100 / 3)}`}
-                                    strokeDashoffset="0"
-                                    transform="rotate(-90 50 50)"
-                                />
+                            {/* Single status - fill entire circle */}
+                            {statusCount === 1 && (
+                                <>
+                                    {hasFasting && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#4B3AAC"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="100 0"
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                    {hasCalLogged && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#10B981"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="100 0"
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                    {hasActivity && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#34D399"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="100 0"
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                </>
                             )}
-                            {hasCalLogged && (
-                                <Circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    stroke="#10B981" // Green
-                                    strokeWidth="8"
-                                    fill="none"
-                                    strokeDasharray={`${100 / 3} ${100 - (100 / 3)}`}
-                                    strokeDashoffset={-(100 / 3 * (hasFasting ? 1 : 0))}
-                                    transform="rotate(-90 50 50)"
-                                />
+
+                            {/* Two statuses - 50% each */}
+                            {statusCount === 2 && (
+                                <>
+                                    {hasFasting && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#4B3AAC"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="50 50"
+                                            strokeDashoffset="0"
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                    {hasCalLogged && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#10B981"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="50 50"
+                                            strokeDashoffset={hasFasting ? "-50" : "0"}
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                    {hasActivity && (
+                                        <Circle
+                                            cx="50"
+                                            cy="50"
+                                            r="45"
+                                            stroke="#34D399"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeDasharray="50 50"
+                                            strokeDashoffset={
+                                                (hasFasting && hasCalLogged) ? "0" :
+                                                    (hasFasting || hasCalLogged) ? "-50" : "0"
+                                            }
+                                            transform="rotate(-90 50 50)"
+                                        />
+                                    )}
+                                </>
                             )}
-                            {hasActivity && (
-                                <Circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    stroke="#34D399" // Light Green
-                                    strokeWidth="8"
-                                    fill="none"
-                                    strokeDasharray={`${100 / 3} ${100 - (100 / 3)}`}
-                                    strokeDashoffset={-(100 / 3 * ((hasFasting ? 1 : 0) + (hasCalLogged ? 1 : 0)))}
-                                    transform="rotate(-90 50 50)"
-                                />
+
+                            {/* Three statuses - 33.33% each */}
+                            {statusCount === 3 && (
+                                <>
+                                    <Circle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        stroke="#4B3AAC"
+                                        strokeWidth="8"
+                                        fill="none"
+                                        strokeDasharray="33.33 66.67"
+                                        strokeDashoffset="0"
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                    <Circle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        stroke="#10B981"
+                                        strokeWidth="8"
+                                        fill="none"
+                                        strokeDasharray="33.33 66.67"
+                                        strokeDashoffset="-33.33"
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                    <Circle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        stroke="#34D399"
+                                        strokeWidth="8"
+                                        fill="none"
+                                        strokeDasharray="33.33 66.67"
+                                        strokeDashoffset="-66.67"
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                </>
                             )}
                         </Svg>
                     </View>
@@ -281,7 +368,7 @@ export default function MeScreen() {
         );
     };
 
-    const radius = wp('20%'); // Increased radius
+    const radius = wp('20%'); // Slightly reduced radius
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
@@ -318,29 +405,28 @@ export default function MeScreen() {
                         {/* CIRCLE CENTERED */}
                         <View style={styles.progressWrapper}>
                             <View style={styles.progressContainer}>
-                                <Svg width={wp("46%")} height={wp("46%")} style={styles.progressSvg}>
+                                <Svg width={wp("50%")} height={wp("50%")} style={styles.progressSvg}>
                                     {/* Background circle */}
                                     <Circle
-                                        cx={wp("23%")}
-                                        cy={wp("23%")}
+                                        cx={wp("25%")}
+                                        cy={wp("25%")}
                                         r={radius}
                                         stroke="#fff"
-                                        strokeWidth={wp("2%")}
+                                        strokeWidth={wp("1.8%")}
                                         fill="#E5E7EB"
                                     />
 
                                     {/* Progress circle */}
                                     <Circle
-                                        cx={wp("23%")}
-                                        cy={wp("23%")}
+                                        cx={wp("25%")}
+                                        cy={wp("25%")}
                                         r={radius}
                                         stroke="#10B981"
-                                        strokeWidth={wp("2%")}
+                                        strokeWidth={wp("1.8%")}
                                         fill="none"
                                         strokeDasharray={circumference}
                                         strokeDashoffset={strokeDashoffset}
-                                        strokeLinecap="round"
-                                        transform={`rotate(-90 ${wp("23%")} ${wp("23%")})`}
+                                        transform={`rotate(-90 ${wp("25%")} ${wp("25%")})`}
                                     />
                                 </Svg>
 
@@ -360,13 +446,13 @@ export default function MeScreen() {
                                         styles.progressBadge,
                                         {
                                             left:
-                                                wp("23%") +
+                                                wp("25%") +
                                                 radius * Math.cos((-90 + progressPercentage * 3.6) * (Math.PI / 180)) -
-                                                wp("5%"),
+                                                wp("4.5%"),
                                             top:
-                                                wp("23%") +
+                                                wp("25%") +
                                                 radius * Math.sin((-90 + progressPercentage * 3.6) * (Math.PI / 180)) -
-                                                wp("5%"),
+                                                wp("4.5%"),
                                         },
                                     ]}
                                 >
@@ -402,17 +488,17 @@ export default function MeScreen() {
                     <View style={styles.calorieSummaryRow}>
                         <View style={styles.calorieItem}>
                             <Text style={styles.calorieLabel}>Weekly Calorie Intake</Text>
-                            <Text style={styles.calorieValue}>{weeklyCalorieIntake} <Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(12) }}>kcal</Text></Text>
+                            <Text style={styles.calorieValue}>{weeklyCalorieIntake} <Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(11) }}>kcal</Text></Text>
                         </View>
 
                         <View style={styles.calorieItem}>
                             <Text style={styles.calorieLabel}>Weekly Calorie Balance</Text>
-                            <Text style={styles.calorieValue}>{weeklyCalorieBalance} <Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(12) }}>kcal</Text></Text>
+                            <Text style={styles.calorieValue}>{weeklyCalorieBalance} <Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(11) }}>kcal</Text></Text>
                         </View>
 
                         <View style={styles.calorieItem}>
                             <Text style={styles.calorieLabel}>Estimated Goal Achievement time</Text>
-                            <Text style={styles.calorieValue}>{estimatedGoalTime}<Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(12) }}> weeks/s</Text></Text>
+                            <Text style={styles.calorieValue}>{estimatedGoalTime}<Text style={{ fontWeight: '300', color: '#666', fontSize: RFValue(11) }}> weeks/s</Text></Text>
                         </View>
                     </View>
                 </View>
@@ -436,10 +522,7 @@ export default function MeScreen() {
 
                         {/* Legend */}
                         <View style={styles.legend}>
-                            <View style={styles.legendItem}>
-                                <View style={[styles.legendDot, { backgroundColor: 'rgba(75, 58, 172, 0.1)', borderColor: '#4B3AAC', borderWidth: wp('0.5%') }]} />
-                                <Text style={styles.legendText}>Selected</Text>
-                            </View>
+
                             <View style={styles.legendItem}>
                                 <View style={[styles.legendDot, styles.legendDotRing, { borderColor: '#4B3AAC' }]} />
                                 <Text style={styles.legendText}>Fasting</Text>
@@ -599,80 +682,249 @@ export default function MeScreen() {
                         </View>
 
                         {/* Interactive Legend */}
-                        <View style={styles.legend}>
+                        <View style={styles.modalLegendContainer}>
                             <TouchableOpacity
-                                style={styles.legendItem}
+                                style={[
+                                    styles.modalLegendButton,
+                                    activeFilters.length === 0 && styles.modalLegendButtonActive
+                                ]}
                                 onPress={() => setActiveFilters([])}
                             >
                                 <View style={[
                                     styles.legendDot,
-                                    {
-                                        backgroundColor: activeFilters.length === 0 ? '#4B3AAC' : 'transparent',
-                                        borderColor: '#4B3AAC',
-                                        borderWidth: wp('0.5%')
-                                    }
+                                    { backgroundColor: '#4B3AAC' }
                                 ]} />
                                 <Text style={[
-                                    styles.legendText,
-                                    activeFilters.length === 0 && styles.legendTextActive
+                                    styles.modalLegendButtonText,
+                                    activeFilters.length === 0 && styles.modalLegendButtonTextActive
                                 ]}>All</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.legendItem}
+                                style={[
+                                    styles.modalLegendButton,
+                                    activeFilters.includes('fasting') && styles.modalLegendButtonActive
+                                ]}
                                 onPress={() => toggleFilter('fasting')}
                             >
                                 <View style={[
                                     styles.legendDot,
-                                    {
-                                        backgroundColor: activeFilters.includes('fasting') ? '#4B3AAC' : 'transparent',
-                                        borderColor: '#4B3AAC',
-                                        borderWidth: wp('0.5%')
-                                    }
+                                    { backgroundColor: '#4B3AAC' }
                                 ]} />
                                 <Text style={[
-                                    styles.legendText,
-                                    activeFilters.includes('fasting') && styles.legendTextActive
+                                    styles.modalLegendButtonText,
+                                    activeFilters.includes('fasting') && styles.modalLegendButtonTextActive
                                 ]}>Fasting</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.legendItem}
+                                style={[
+                                    styles.modalLegendButton,
+                                    activeFilters.includes('calLogged') && styles.modalLegendButtonActive
+                                ]}
                                 onPress={() => toggleFilter('calLogged')}
                             >
                                 <View style={[
                                     styles.legendDot,
-                                    {
-                                        backgroundColor: activeFilters.includes('calLogged') ? '#10B981' : 'transparent',
-                                        borderColor: '#10B981',
-                                        borderWidth: wp('0.5%')
-                                    }
+                                    { backgroundColor: '#10B981' }
                                 ]} />
                                 <Text style={[
-                                    styles.legendText,
-                                    activeFilters.includes('calLogged') && styles.legendTextActive
+                                    styles.modalLegendButtonText,
+                                    activeFilters.includes('calLogged') && styles.modalLegendButtonTextActive
                                 ]}>Cal logged</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.legendItem}
+                                style={[
+                                    styles.modalLegendButton,
+                                    activeFilters.includes('activity') && styles.modalLegendButtonActive
+                                ]}
                                 onPress={() => toggleFilter('activity')}
                             >
                                 <View style={[
                                     styles.legendDot,
-                                    {
-                                        backgroundColor: activeFilters.includes('activity') ? '#34D399' : 'transparent',
-                                        borderColor: '#34D399',
-                                        borderWidth: wp('0.5%')
-                                    }
+                                    { backgroundColor: '#34D399' }
                                 ]} />
                                 <Text style={[
-                                    styles.legendText,
-                                    activeFilters.includes('activity') && styles.legendTextActive
+                                    styles.modalLegendButtonText,
+                                    activeFilters.includes('activity') && styles.modalLegendButtonTextActive
                                 ]}>Activity</Text>
                             </TouchableOpacity>
                         </View>
 
+                        {/* Statistics Section - Clean minimal design */}
+                        <View style={styles.statsContainer}>
+                            {activeFilters.length === 0 ? (
+                                // All selected - Show balanced stats
+                                <View style={styles.statsRow}>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.circleTextContainer}>
+                                            <View style={styles.segmentedCircleContainer}>
+                                                <Svg width={wp('12%')} height={wp('12%')} style={styles.segmentedCircleSvg}>
+                                                    {/* Three equal segments for balanced state */}
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#4B3AAC"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="33.33 66.67"
+                                                        strokeDashoffset="0"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#10B981"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="33.33 66.67"
+                                                        strokeDashoffset="-33.33"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#34D399"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="33.33 66.67"
+                                                        strokeDashoffset="-66.67"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                </Svg>
+                                            </View>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.statLabel}>Balanced</Text>
+                                                <Text style={styles.statValue}>0 days</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.circleTextContainer}>
+                                            <View style={styles.tickContainer}>
+                                                <Ionicons name="checkmark" size={RFValue(16)} color="#10B981" />
+                                            </View>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.statLabel}>Longest streak</Text>
+                                                <Text style={styles.statValue}>0</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+                            ) : activeFilters.includes('fasting') ? (
+                                // Fasting selected
+                                <View style={styles.statsRow}>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.circleTextContainer}>
+                                            <View style={styles.segmentedCircleContainer}>
+                                                <Svg width={wp('12%')} height={wp('12%')} style={styles.segmentedCircleSvg}>
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#4B3AAC"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="100 0"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                </Svg>
+                                            </View>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.statLabel}>Completed</Text>
+                                                <Text style={styles.statValue}>0 days</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.textOnlyContainer}>
+                                            <Text style={styles.statLabel}>Total fast</Text>
+                                            <Text style={styles.statValue}>0</Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.textOnlyContainer}>
+                                            <Text style={styles.statLabel}>Fast avg.</Text>
+                                            <Text style={styles.statValue}>0h 0m</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            ) : activeFilters.includes('calLogged') ? (
+                                // Cal logged selected
+                                <View style={styles.statsRow}>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.circleTextContainer}>
+                                            <View style={styles.segmentedCircleContainer}>
+                                                <Svg width={wp('12%')} height={wp('12%')} style={styles.segmentedCircleSvg}>
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#10B981"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="100 0"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                </Svg>
+                                            </View>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.statLabel}>Completed</Text>
+                                                <Text style={styles.statValue}>0 days</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.textOnlyContainer}>
+                                            <Text style={styles.statLabel}>Total logged</Text>
+                                            <Text style={styles.statValue}>0</Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.textOnlyContainer}>
+                                            <Text style={styles.statLabel}>Cal avg.</Text>
+                                            <Text style={styles.statValue}>0 kcal</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            ) : activeFilters.includes('activity') ? (
+                                // Activity selected
+                                <View style={styles.statsRow}>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.circleTextContainer}>
+                                            <View style={styles.segmentedCircleContainer}>
+                                                <Svg width={wp('12%')} height={wp('12%')} style={styles.segmentedCircleSvg}>
+                                                    <Circle
+                                                        cx={wp('3%')}
+                                                        cy={wp('3%')}
+                                                        r={wp('2%')}
+                                                        stroke="#34D399"
+                                                        strokeWidth="2"
+                                                        fill="none"
+                                                        strokeDasharray="100 0"
+                                                        transform={`rotate(-90 ${wp('3%')} ${wp('3%')})`}
+                                                    />
+                                                </Svg>
+                                            </View>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.statLabel}>Completed</Text>
+                                                <Text style={styles.statValue}>0 days</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={styles.horizontalStatItem}>
+                                        <View style={styles.textOnlyContainer}>
+                                            <Text style={styles.statLabel}>Activity avg.</Text>
+                                            <Text style={styles.statValue}>0h 0m</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            ) : null}
+                        </View>
                         {/* FULL Calendar Grid */}
                         <View style={styles.modalCalendarGrid}>
                             {fullMonthCalendar.map((item, index) => renderCalendarDay(item, index, true))}
@@ -747,11 +999,12 @@ const styles = StyleSheet.create({
     summaryCard: {
         backgroundColor: '#fff',
         borderRadius: wp('4%'),
-        padding: wp('5%'),
+        padding: wp('3.5%'), // Reduced from wp('5%')
         marginHorizontal: wp('5%'),
         marginBottom: hp('3%'),
         borderWidth: wp('0.25%'),
         borderColor: '#E5E7EB',
+        paddingTop: hp('2%'),
     },
     weightSection: {
         flexDirection: 'row',
@@ -760,89 +1013,90 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     progressWrapper: {
-        marginRight: wp('8%'),
-        marginBottom: hp('2%'),
+        marginRight: wp('6%'), // Reduced from wp('8%')
+        marginBottom: hp('0%'),
     },
     progressContainer: {
         position: 'relative',
-        minWidth: wp('46%'),
-        minHeight: wp('46%'),
+        minWidth: wp('42%'), // Reduced from wp('46%')
+        minHeight: wp('42%'), // Reduced from wp('46%')
         justifyContent: 'center',
         alignItems: 'center',
-        
     },
     progressSvg: {
         position: 'absolute',
+        width: 'auto'
     },
     progressInner: {
-        width: wp('46%'),
-        height: wp('46%'),
+        width: wp('42%'), // Reduced from wp('46%')
+        height: wp('42%'), // Reduced from wp('46%')
         justifyContent: 'center',
         alignItems: 'center',
-        padding: wp('2%'),
+        padding: wp('1.5%'), // Reduced padding
     },
     progressLabel: {
-        fontSize: RFValue(14),
+        fontSize: RFValue(12), // Reduced from RFValue(14)
         color: '#666',
-        marginBottom: hp('1%'),
+        marginBottom: hp('0.8%'), // Reduced margin
     },
     progressValue: {
-        fontSize: RFValue(22),
+        fontSize: RFValue(18), // Reduced from RFValue(22)
         fontWeight: '700',
         color: '#111',
-        marginBottom: hp('1%'),
+        marginBottom: hp('0.8%'), // Reduced margin
     },
     progressBadge: {
         position: "absolute",
         backgroundColor: "#10B981",
-        paddingHorizontal: wp("3%"),
-        paddingVertical: hp("0.5%"),
+        paddingHorizontal: wp("2.5%"), // Reduced padding
+        paddingVertical: hp("0.4%"), // Reduced padding
         borderRadius: wp("20%"),
         justifyContent: "center",
         alignItems: "center",
-        minWidth: wp("12%"),
+        minWidth: wp("10%"), // Reduced width
     },
     progressBadgeText: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(10), // Reduced from RFValue(12)
         fontWeight: '700',
         color: '#fff',
     },
     weightInfoContainer: {
-        paddingLeft: wp('7%'),
+        paddingLeft: wp('5%'), // Reduced from wp('7%')
         flex: 1,
         justifyContent: 'space-between',
         marginTop: hp('0%'),
     },
     weightInfoItem: {
-        marginBottom: hp('2%'),
+        marginBottom: hp('1.5%'),
+        marginTop: hp('3%')
     },
     weightInfoLabel: {
-        fontSize: RFValue(14),
+        fontSize: RFValue(12), // Reduced from RFValue(14)
         color: '#666',
-        marginBottom: hp('0.5%'),
+        marginBottom: hp('0.3%'), // Reduced margin
     },
     weightInfoValue: {
-        fontSize: RFValue(16),
+        fontSize: RFValue(14), // Reduced from RFValue(16)
         fontWeight: '600',
         color: '#111',
     },
     targetWeightRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: wp('2%'),
+        gap: wp('1.5%'), // Reduced gap
     },
     editTargetButton: {
-        padding: wp('1%'),
+        padding: wp('0.8%'), // Reduced padding
     },
     logWeightButton: {
         backgroundColor: '#F3F3FA',
-        paddingVertical: hp('1.5%'),
-        paddingHorizontal: wp('4%'),
+        paddingVertical: hp('1%'), // Reduced padding
+        paddingHorizontal: wp('3%'), // Reduced padding
         borderRadius: wp('8%'),
         alignSelf: 'center',
     },
     logWeightButtonText: {
-        fontSize: RFValue(13),
+        fontSize: RFValue(11), // Reduced from RFValue(13)
         fontWeight: '600',
         color: '#111',
     },
@@ -991,20 +1245,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginTop: hp('2%'),
-        paddingVertical: hp('1%'),
-        gap: wp('2%'),
+        marginTop: hp('1.5%'), // Reduced margin
+        paddingVertical: hp('0.5%'), // Reduced padding
+        gap: wp('1.5%'), // Reduced gap
     },
     calorieItem: {
         width: '31%',
     },
     calorieLabel: {
-        fontSize: RFValue(12),
+        fontSize: RFValue(10), // Reduced from RFValue(12)
         color: '#666',
-        marginBottom: hp('0.5%'),
+        marginBottom: hp('0.3%'), // Reduced margin
     },
     calorieValue: {
-        fontSize: RFValue(14),
+        fontSize: RFValue(12), // Reduced from RFValue(14)
         fontWeight: '700',
         color: '#111',
     },
@@ -1070,6 +1324,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: '100%',
         height: '100%',
+
     },
     hiddenDay: {
         opacity: 0.3,
@@ -1082,5 +1337,119 @@ const styles = StyleSheet.create({
     legendTextActive: {
         color: '#4B3AAC',
         fontWeight: '700',
+    },
+    modalLegendContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: wp('1%'),
+        backgroundColor: '#4B3AAC',
+        padding: wp('1%'),
+        borderRadius: wp('3%'),
+        marginBottom: hp('2%'),
+        justifyContent: 'center',
+    },
+    modalLegendButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('1%'),
+        paddingVertical: hp('0.4%'),
+        paddingHorizontal: wp('2%'),
+        borderRadius: wp('3%'),
+        backgroundColor: '#FFFFFF',
+        borderWidth: wp('0.25%'),
+        borderColor: '#E5E7EB',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+        elevation: 2,
+    },
+    modalLegendButtonActive: {
+        backgroundColor: '#E5E7EB',
+        borderColor: '#4B3AAC',
+    },
+    modalLegendButtonText: {
+        fontSize: RFValue(12),
+        color: '#666', // Light grey color for unselected
+        fontWeight: '500',
+    },
+    modalLegendButtonTextActive: {
+        color: '#111', // Black color for selected
+        fontWeight: '600',
+    },
+    statsContainer: {
+
+        padding: wp('4%'),
+        borderRadius: wp('3%'),
+        marginBottom: hp('2%'),
+    },
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start'
+    },
+    statItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    statLabel: {
+        fontSize: RFValue(12),
+        color: '#666',
+        fontWeight: '500',
+        marginBottom: hp('1%'),
+    },
+    statValue: {
+        fontSize: RFValue(14),
+        color: '#111',
+        fontWeight: '600',
+        marginTop: hp('0.5%'),
+    },
+    colorCircles: {
+        flexDirection: 'row',
+        gap: wp('1%'),
+        marginBottom: hp('0.5%'),
+    },
+    colorCircle: {
+        width: wp('3%'),
+        height: wp('3%'),
+        borderRadius: wp('1.5%'),
+    },
+
+
+    horizontalStatItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    circleTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('2%'),
+    },
+    textContainer: {
+        alignItems: 'flex-start',
+    },
+    textOnlyContainer: {
+        alignItems: 'center',
+    },
+    segmentedCircleContainer: {
+        width: wp('12%'),
+        height: wp('12%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    segmentedCircleSvg: {
+        width: wp('12%'),
+        height: wp('12%'),
+    },
+    tickContainer: {
+        width: wp('12%'),
+        height: wp('12%'),
+        borderRadius: wp('6%'),
+        backgroundColor: '#F0FDF4',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

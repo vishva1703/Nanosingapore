@@ -10,8 +10,8 @@ export default function PersonalDetails() {
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={26} color="#000" />
+                <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Personal details</Text>
             </View>
@@ -23,10 +23,12 @@ export default function PersonalDetails() {
                     <Text style={styles.goalValue}>72 kg</Text>
                 </View>
 
-                <TouchableOpacity style={styles.changeGoalBtn} onPress={() => router.push({
-                    pathname: "/screens/desiredscreen",
-                    params: { from: "settings" }
-                })}>
+                <TouchableOpacity style={styles.changeGoalBtn} onPress={() =>
+                    router.push({
+                        pathname: "/screens/desiredscreen",
+                        params: { from: "settings" },
+                    })
+                }>
                     <Text style={styles.changeGoalText}>Change Goal</Text>
                 </TouchableOpacity>
             </View>
@@ -37,12 +39,15 @@ export default function PersonalDetails() {
                 {/* Current Weight */}
                 <View style={styles.row}>
                     <Text style={styles.rowLabel}>Current weight</Text>
+
                     <View style={styles.rowValueWrap}>
                         <Text style={styles.rowValue}>85 kg</Text>
-                        <TouchableOpacity onPress={() => router.push({
-                            pathname: "/screens/WeightScreen",
-                            params: { from: "settings" }
-                        })}>
+                        <TouchableOpacity onPress={() =>
+                            router.push({
+                                pathname: "/screens/WeightScreen",
+                                params: { from: "settings" },
+                            })
+                        }>
                             <Ionicons name="pencil-outline" size={18} color="#666" />
                         </TouchableOpacity>
                     </View>
@@ -51,45 +56,53 @@ export default function PersonalDetails() {
                 {/* Height */}
                 <View style={styles.row}>
                     <Text style={styles.rowLabel}>Height</Text>
+
                     <View style={styles.rowValueWrap}>
                         <Text style={styles.rowValue}>5 ft 5 in</Text>
-                        <TouchableOpacity style={styles.row} onPress={() => router.push({
-                            pathname: "/screens/WeightScreen",
-                            params: { from: "settings" }
-                        })}>
+                        <TouchableOpacity onPress={() =>
+                            router.push({
+                                pathname: "/screens/WeightScreen",
+                                params: { from: "settings" },
+                            })
+                        }>
                             <Ionicons name="pencil-outline" size={18} color="#666" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Date of birth */}
+                {/* DOB */}
                 <View style={styles.row}>
                     <Text style={styles.rowLabel}>Date of birth</Text>
+
                     <View style={styles.rowValueWrap}>
                         <Text style={styles.rowValue}>05/04/2012</Text>
-                        <TouchableOpacity style={styles.row} onPress={() => router.push({
-                            pathname: "/screens/birth-date",
-                            params: { from: "settings" }
-                        })}>
+                        <TouchableOpacity onPress={() =>
+                            router.push({
+                                pathname: "/screens/birth-date",
+                                params: { from: "settings" },
+                            })
+                        }>
                             <Ionicons name="pencil-outline" size={18} color="#666" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* Gender */}
-                <View style={styles.row}>
+                <View style={styles.rowLast}>
                     <Text style={styles.rowLabel}>Gender</Text>
+
                     <View style={styles.rowValueWrap}>
                         <Text style={styles.rowValue}>Female</Text>
-                        <TouchableOpacity style={styles.row} onPress={() => router.push({
-                            pathname: "/screens/onboarding",
-                            params: { from: "settings" }
-                        })}>       
-                         <Ionicons name="pencil-outline" size={18} color="#666" />
+                        <TouchableOpacity onPress={() =>
+                            router.push({
+                                pathname: "/screens/onboarding",
+                                params: { from: "settings" },
+                            })
+                        }>
+                            <Ionicons name="pencil-outline" size={18} color="#666" />
                         </TouchableOpacity>
                     </View>
                 </View>
-
             </View>
 
         </SafeAreaView>
@@ -99,75 +112,85 @@ export default function PersonalDetails() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F4F4FA", // lighter, matches screenshot
+        backgroundColor: "#F6F6FB",
         paddingHorizontal: 16,
     },
 
     header: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: 22,
-        marginTop: 6,
-        gap: 10,
+        marginTop: 10,
+        marginBottom: 24,
+    },
+
+    backBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "#EFEFFD",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 10,
     },
 
     headerTitle: {
-        fontSize: 20,
-        fontWeight: "600",
+        fontSize: 22,
+        fontWeight: "700",
         color: "#000",
     },
 
     goalCard: {
         backgroundColor: "#fff",
-        borderRadius: 12,
-        paddingVertical: 18,
-        paddingHorizontal: 18,
+        borderRadius: 14,
+        padding: 20,
         marginBottom: 22,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+
+        // soft shadow
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
     },
 
     labelSmall: {
-        color: "#666",
+        color: "#777",
         fontSize: 14,
         marginBottom: 2,
     },
 
     goalValue: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: "700",
         color: "#000",
     },
 
     changeGoalBtn: {
         backgroundColor: "#433AAC",
-        paddingVertical: 7,
+        paddingVertical: 8,
         paddingHorizontal: 16,
-        borderRadius: 18,
+        borderRadius: 20,
     },
 
     changeGoalText: {
         color: "#fff",
         fontWeight: "600",
-        fontSize: 13,
+        fontSize: 14,
     },
 
     fieldCard: {
         backgroundColor: "#fff",
-        borderRadius: 12,
-        paddingTop: 4,
-        paddingBottom: 6,
+        borderRadius: 14,
+        paddingVertical: 4,
+        overflow: "hidden",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
     },
 
     row: {
@@ -177,25 +200,32 @@ const styles = StyleSheet.create({
         paddingVertical: 18,
         paddingHorizontal: 18,
         borderBottomWidth: 1,
-        borderBottomColor: "#EFEFEF",
+        borderBottomColor: "#EFEFF5",
+    },
+
+    rowLast: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 18,
+        paddingHorizontal: 18,
     },
 
     rowLabel: {
-        fontSize: 15,
+        fontSize: 16,
         color: "#444",
-        fontWeight: "400",
+        fontWeight: "500",
     },
 
     rowValueWrap: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
     },
 
     rowValue: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: "600",
         color: "#000",
     },
 });
-

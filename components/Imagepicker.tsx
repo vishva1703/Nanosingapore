@@ -13,6 +13,11 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { Image } from 'react-native';
+
+const labelImage = require('../assets/images/Frame1.png');
+const barcodeImage = require('../assets/images/Frame1.png');
+const scanImage = require('../assets/images/Frame1.png');
 
 type CameraMode = 'scan' | 'barcode' | 'label' | 'gallery';
 
@@ -180,30 +185,28 @@ export default function Imagepicker() {
                         <View style={styles.cameraOverlay}>
                             {/* Scanner overlay based on mode */}
                             <View style={styles.scannerOverlay}>
-                                {activeMode === 'scan' && (
-                                    <>
-                                        <Ionicons name="scan" size={RFValue(250)} color="#fff" />
-                                        <View style={styles.scanFrame} />
-                                    </>
-                                )}
+                            {activeMode === 'scan' && (
+    <Image
+        source={scanImage}
+        style={styles.scanImageStyle}
+    />
+)}
 
-                                {activeMode === 'barcode' && (
-                                    <>
-                                        <View style={styles.barcodeFrame}>
-                                            <View style={styles.barcodeLine} />
-                                            <Text style={styles.scanText}>Align barcode within the frame</Text>
-                                        </View>
-                                    </>
-                                )}
+{activeMode === 'barcode' && (
+    <Image
+        source={barcodeImage}
+        style={styles.barcodeImageStyle}
+    />
+)}
 
-                                {activeMode === 'label' && (
-                                    <>
-                                        <View style={styles.labelFrame}>
-                                            <MaterialCommunityIcons name="tag-outline" size={RFValue(40)} color="#fff" />
-                                            <Text style={styles.scanText}>Position nutrition label within frame</Text>
-                                        </View>
-                                    </>
-                                )}
+{activeMode === 'label' && (
+    <Image
+        source={labelImage}
+        style={styles.labelImageStyle}
+    />
+)}
+
+
                             </View>
 
                             <View style={styles.modeSelectorContainer}>
@@ -449,4 +452,31 @@ const styles = StyleSheet.create({
         fontSize: RFValue(14),
         fontWeight: '600',
     },
+    centerImage: {
+        width: wp('80%'),
+        height: hp('40%'),
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    scanImageStyle: {
+        width: wp('70%'),
+        height: wp('70%'),  // square
+        resizeMode: 'contain',
+    },
+    
+    barcodeImageStyle: {
+        width: wp('85%'),
+        height: wp('55%'),
+        resizeMode: 'contain',
+        transform: [{ rotate: '90deg' }],
+    },
+    
+    
+    labelImageStyle: {
+        width: wp('60%'),
+        height: hp('45%'),  // tall rectangle
+        resizeMode: 'contain',
+    },
+    
 });

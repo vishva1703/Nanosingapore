@@ -70,7 +70,7 @@ export default function AdjustGoalsScreen({ navigation }: any) {
         />
 
         {/* Auto Generate Button */}
-        <TouchableOpacity style={styles.autoButton}>
+        <TouchableOpacity style={styles.autoButton} onPress={()=>router.push('/screens/workout-frequency')}>
           <Text style={styles.autoButtonText}>Auto generate goals</Text>
         </TouchableOpacity>
       </View>
