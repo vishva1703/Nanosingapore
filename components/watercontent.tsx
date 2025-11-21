@@ -364,14 +364,13 @@ const WaterContent: React.FC<WaterContentProps> = ({
                     snapToInterval={50}
                     decelerationRate="fast"
                     contentContainerStyle={styles.pickerScrollContent}
-                    onScroll={(e) => {
+                    onMomentumScrollEnd={(e) => {
                       const offsetY = e.nativeEvent.contentOffset.y;
                       const index = Math.round(offsetY / 50);
                       const safeIndex = Math.max(0, Math.min(index, waterOptions.length - 1));
-                      if (waterOptions[safeIndex] !== selectedAmount) {
-                        setSelectedAmount(waterOptions[safeIndex]);
-                      }
+                      setSelectedAmount(waterOptions[safeIndex]);
                     }}
+                    
                     scrollEventThrottle={16}
                   >
                     {waterOptions.map((num, index) => (
@@ -618,7 +617,7 @@ const styles = StyleSheet.create({
     padding: wp("6%"),
     borderTopLeftRadius: wp("6%"),
     borderTopRightRadius: wp("6%"),
-    paddingBottom: hp("15%"),
+    paddingBottom: hp("3%"),
   },
   modalHeader: {
     flexDirection: "row",
@@ -714,7 +713,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F3F4F6",
     paddingVertical: hp("1.8%"),
-    borderRadius: wp("4%"),
+    borderRadius: wp("8%"),
     alignItems: "center",
   },
   pickerCancelText: {
@@ -726,7 +725,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#4B3AAC",
     paddingVertical: hp("1.8%"),
-    borderRadius: wp("4%"),
+    borderRadius: wp("8%"),
     alignItems: "center",
   },
   pickerSaveText: {

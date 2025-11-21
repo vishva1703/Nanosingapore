@@ -6,14 +6,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Platform,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RFValue } from "react-native-responsive-fontsize";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function AdjustGoalsScreen({ navigation }: any) {
-    const router = useRouter();
+export default function AdjustGoalsScreen() {
+  const router = useRouter();
   const [calorie, setCalorie] = useState("900 kcl");
   const [protein, setProtein] = useState("120");
   const [carbs, setCarbs] = useState("100");
@@ -21,61 +24,73 @@ export default function AdjustGoalsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                            <Ionicons name="chevron-back" size={24} color="#1F2937" />
-                        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Adjust goals</Text>
-        <View style={{ width: 22 }} /> 
-      </View>
-
-      {/* Form */}
-      <View style={styles.formContainer}>
-
-        {/* Calorie */}
-        <Text style={styles.label}>Calorie</Text>
-        <TextInput
-          value={calorie}
-          onChangeText={setCalorie}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-
-        {/* Protein */}
-        <Text style={styles.label}>Protein</Text>
-        <TextInput
-          value={protein}
-          onChangeText={setProtein}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-
-        {/* Carbs */}
-        <Text style={styles.label}>Carbs</Text>
-        <TextInput
-          value={carbs}
-          onChangeText={setCarbs}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-
-        {/* Fat */}
-        <Text style={styles.label}>Fat</Text>
-        <TextInput
-          value={fat}
-          onChangeText={setFat}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-
-        {/* Auto Generate Button */}
-        <TouchableOpacity style={styles.autoButton} onPress={()=>router.push('/screens/workout-frequency')}>
-          <Text style={styles.autoButtonText}>Auto generate goals</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 120 }} // add space for button
+        >
+  
+          {/* Header */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Adjust goals</Text>
+            <View style={{ width: 22 }} />
+          </View>
+  
+          {/* Form */}
+          <View style={styles.formContainer}>
+            <Text style={styles.label}>Calorie</Text>
+            <TextInput
+              value={calorie}
+              onChangeText={setCalorie}
+              style={styles.input}
+              keyboardType="numeric"
+            />
+  
+            <Text style={styles.label}>Protein</Text>
+            <TextInput
+              value={protein}
+              onChangeText={setProtein}
+              style={styles.input}
+              keyboardType="numeric"
+            />
+  
+            <Text style={styles.label}>Carbs</Text>
+            <TextInput
+              value={carbs}
+              onChangeText={setCarbs}
+              style={styles.input}
+              keyboardType="numeric"
+            />
+  
+            <Text style={styles.label}>Fat</Text>
+            <TextInput
+              value={fat}
+              onChangeText={setFat}
+              style={styles.input}
+              keyboardType="numeric"
+            />
+          </View>
+  
+        </ScrollView>
+  
+        {/* Fixed Button */}
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => router.push("/screens/workout-frequency")}
+        >
+          <Text style={styles.addBtnText}>Auto generate goals</Text>
         </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
+  
 }
 
 const styles = StyleSheet.create({
@@ -134,20 +149,33 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
 
-  autoButton: {
-    marginTop: hp("5%"),
-    width: "100%",
-    height: hp("7%"),
-    borderRadius: wp("9%"),
-    borderWidth: 1.5,
-    borderColor: "#4B3AAC",
-    justifyContent: "center",
+  addBtn: {
+    backgroundColor: "#4F2D9F",
+    paddingVertical: hp("2%"),
+    borderRadius: 30,
     alignItems: "center",
+    justifyContent: "center",
+  
+    position: "absolute",
+    bottom: Platform.OS === "ios" ? 20 : 10,
+    left: wp("4%"),
+    right: wp("4%"),
+  
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-
-  autoButtonText: {
+  
+  addBtnText: {
+    color: "#FFF",
     fontSize: RFValue(14),
-    color: "#111111",
     fontWeight: "600",
+  },
+  fixedBottomContainer: {
+    position: "absolute",
+    bottom: hp("5%"),
+    left: wp("5%"),
+    right: wp("5%"),
   },
 });

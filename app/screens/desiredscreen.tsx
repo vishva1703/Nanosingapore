@@ -12,6 +12,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Ruler from "@/components/Ruler";
 
 const { width } = Dimensions.get("window");
 const SMALL_TICKS_PER_KG = 5;
@@ -94,70 +95,9 @@ export default function DesiredWeightScreen() {
           <View style={styles.scaleWrapper}>
             <View style={styles.weightInfo}>
               <Text style={styles.subLabel}>Lose Weight</Text>
-              <Text style={styles.centerWeight}>{selectedWeight} kg</Text>
             </View>
 
-            <Animated.FlatList
-              data={ticks}
-              horizontal
-              keyExtractor={(item) => item.index.toString()}
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={ITEM_WIDTH}
-              decelerationRate="fast"
-              bounces={false}
-              initialScrollIndex={initialIndex}
-              getItemLayout={(_, index) => ({
-                length: ITEM_WIDTH,
-                offset: ITEM_WIDTH * index,
-                index,
-              })}
-              scrollEventThrottle={16}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                { useNativeDriver: false }
-              )}
-              contentContainerStyle={{
-                paddingHorizontal: width / 2 - ITEM_WIDTH / 2,
-              }}
-              renderItem={({ item, index }) => {
-                const inputRange = [
-                  (index - 1) * ITEM_WIDTH,
-                  index * ITEM_WIDTH,
-                  (index + 1) * ITEM_WIDTH,
-                ];
-
-                const color = scrollX.interpolate({
-                  inputRange,
-                  outputRange: ["#D1D5DB", "#4B3AAC", "#D1D5DB"],
-                  extrapolate: "clamp",
-                });
-
-                // Increased tick heights
-                const height = item.isMajor ? 70 : 35;
-
-                return (
-                  <Animated.View style={styles.tickContainer}>
-                    <Animated.View
-                      style={[
-                        styles.tick,
-                        {
-                          height,
-                          backgroundColor: color,
-                          width: item.isMajor ? 3 : 1.5,
-                        },
-                      ]}
-                    />
-                    {item.isMajor && (
-                      <Animated.Text
-                        style={[styles.tickLabel, { color }]}
-                      >
-                        {Math.round(item.value)}
-                      </Animated.Text>
-                    )}
-                  </Animated.View>
-                );
-              }}
-            />
+            <Ruler />
           </View>
         </ScrollView>
 
@@ -236,9 +176,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  scaleWrapper: { flex: 1, justifyContent: "center" },
-  weightInfo: { alignItems: "center", marginBottom: 40 },
-  subLabel: { fontSize: 16, color: "#6B7280", marginBottom: 8 },
+  scaleWrapper: { flex: 1, justifyContent: "center", marginBottom:20},
+  weightInfo: { alignItems: "center", marginBottom: 90 },
+  subLabel: { fontSize: 20, color: "#111", marginBottom: 8 },
   centerWeight: { fontSize: 36, fontWeight: "700", color: "#111827" },
 
   tickContainer: {

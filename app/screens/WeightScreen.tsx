@@ -311,7 +311,7 @@ export default function HeightWeightScreen() {
         ]}>
           {!isFromSettings && (
             <View style={styles.titleContainer}>
-              <Text style={styles.sectionLabel}>What's your height and weight?</Text>
+              <Text style={styles.sectionLabel}>Height & Weight</Text>
               <Text style={styles.helperText}>
                 This will be used to calculate your custom plan.
               </Text>

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ImageBackground, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const backgroundImage = require('@/assets/images/gym.jpg');
+const backgroundImage = require('@/assets/images/gym.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
