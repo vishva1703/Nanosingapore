@@ -1,17 +1,17 @@
+import ProgressBar from '@/components/ProgressBar';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
-  FlatList,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    FlatList,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 const ITEM_HEIGHT = 50;
 const VISIBLE_ITEMS = 5;
@@ -71,7 +71,6 @@ export default function HeightWeightScreen() {
   const [heightIn, setHeightIn] = useState(7);
   const [weight, setWeight] = useState(150);
   const prevUnitRef = useRef(unit);
-  const progress = useMemo(() => getProgressForScreen('weight'), []);
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
 
@@ -288,18 +287,21 @@ export default function HeightWeightScreen() {
       <View style={styles.wrapper}>
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
+              {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back" size={24} color="#1F2937" />
+              </TouchableOpacity> */}
 
             {!isFromSettings ? (
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-              </View>
+              <ProgressBar screen="weight" noContainer={true} />
             ) : (
+              <View style={styles.headerRow}>
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back" size={24} color="#1F2937" />
+              </TouchableOpacity>
               <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
                 Set Height and Weight
               </Text>
+              </View>
             )}
           </View>
         </View>

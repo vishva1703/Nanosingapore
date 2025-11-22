@@ -1,5 +1,6 @@
+import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -11,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ITEM_HEIGHT = 50;
+const ITEM_HEIGHT = hp('6.25%'); // Responsive item height
 const VISIBLE_ITEMS = 5;
 
 const MIN_WEIGHT_KG = 40;
@@ -22,7 +23,16 @@ const clamp = (value: number, min: number, max: number) =>
 
 export default function HeightWeightScreen() {
   const router = useRouter();
-  const [weight, setWeight] = useState(70); // Default to 70 kg
+  const params = useLocalSearchParams();
+  // Initialize with current weight from params or default to 70
+  const initialWeight = params.currentWeight 
+    ? parseFloat(params.currentWeight as string) 
+    : 70;
+  const [weight, setWeight] = useState(
+    !isNaN(initialWeight) && initialWeight >= MIN_WEIGHT_KG && initialWeight <= MAX_WEIGHT_KG
+      ? initialWeight
+      : 70
+  );
 
   const weightOptions = useMemo(
     () => Array.from({ length: MAX_WEIGHT_KG - MIN_WEIGHT_KG + 1 }, (_, i) => MIN_WEIGHT_KG + i),
@@ -95,7 +105,7 @@ export default function HeightWeightScreen() {
               width: '100%',
               height: ITEM_HEIGHT,
               backgroundColor: 'rgba(0,0,0,0.05)',
-              borderRadius: 10,
+              borderRadius: wp('2.5%'),
               zIndex: 2,
             }}
           />
@@ -169,7 +179,7 @@ export default function HeightWeightScreen() {
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="#1F2937" />
+              <Ionicons name="chevron-back" size={RFValue(24)} color="#1F2937" />
             </TouchableOpacity>
           </View>
         </View>
@@ -196,6 +206,7 @@ export default function HeightWeightScreen() {
             onPress={() => {
               router.push({
                 pathname: "/me",
+                params: { weight: weight.toString() },
               });
             }}
           >
@@ -211,27 +222,27 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
   wrapper: { flex: 1 },
 
-  headerContainer: { paddingHorizontal: 24, paddingVertical: 16 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerContainer: { paddingHorizontal: wp('6%'), paddingVertical: hp('2%') },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: wp('2%') },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
+    width: wp('10%'),
+    height: hp('5%'),
+    borderRadius: wp('5.5%'),
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  titleContainer: { paddingHorizontal: 24, marginBottom: 16 },
-  sectionLabel: { fontSize: 26, fontWeight: '700', color: '#111827' },
+  titleContainer: { paddingHorizontal: wp('6%'), marginBottom: hp('2%') },
+  sectionLabel: { fontSize: RFValue(26), fontWeight: '700', color: '#111827' },
 
   unitIndicator: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: hp('2.5%'),
   },
   unitText: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '600',
     color: '#4B3AAC',
   },
@@ -240,15 +251,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 24,
-    marginTop: 40,
+    marginHorizontal: wp('6%'),
+    marginTop: hp('5%'),
   },
 
   selectorLabel: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 10,
+    marginBottom: hp('1.25%'),
     textAlign: 'center',
   },
 
@@ -258,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemText: {
-    fontSize: 18,
+    fontSize: RFValue(18),
     color: '#9CA3AF',
     textAlign: 'center',
     flexWrap: 'nowrap',
@@ -269,28 +280,28 @@ const styles = StyleSheet.create({
   selectedItemText: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: 14, 
+    fontSize: RFValue(14), 
   },      
 
   bottomContainer: { 
     position: 'absolute', 
-    bottom: 24, 
-    left: 24, 
-    right: 24 
+    bottom: hp('3%'), 
+    left: wp('6%'), 
+    right: wp('6%') 
   },
   primaryCta: {
     backgroundColor: '#4B3AAC',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('3.5%'),
     alignItems: 'center',
     shadowColor: '#4B3AAC',
     shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: wp('2.5%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
   },
   primaryCtaText: { 
     color: '#FFFFFF', 
-    fontSize: 16, 
+    fontSize: RFValue(16), 
     fontWeight: '600', 
     letterSpacing: 0.3 
   },

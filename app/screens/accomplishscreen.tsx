@@ -1,7 +1,8 @@
+import ProgressBar from '@/components/ProgressBar';
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -10,7 +11,6 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 const DIET_OPTIONS: ReadonlyArray<{
@@ -32,7 +32,6 @@ const DIET_OPTIONS: ReadonlyArray<{
 export default function AccomplishScreen() {
     const router = useRouter();
     const [selectedDiet, setSelectedDiet] = useState<string | null>(null);
-    const progress = useMemo(() => getProgressForScreen('accomplish'), []); // Example: 25% progress
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -40,13 +39,11 @@ export default function AccomplishScreen() {
                 {/* 🔹 Header */}
                 <View style={styles.headerContainer}>
                     <View style={styles.headerRow}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                             <Ionicons name="chevron-back" size={24} color="#1F2937" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
-                        <View style={styles.progressTrack}>
-                            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                        </View>
+                        <ProgressBar screen="accomplish" noContainer={true} />
                     </View>
                 </View>
 

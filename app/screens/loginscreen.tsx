@@ -1,7 +1,7 @@
-import { getProgressForScreen } from "@/utils/progressUtils";
+import ProgressBar from '@/components/ProgressBar';
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import {
   Dimensions,
   Image,
@@ -16,20 +16,17 @@ const { width } = Dimensions.get("window");
 
 export default function CreateAccountScreen() {
   const router = useRouter();
-  const headerProgress = useMemo(() => getProgressForScreen('login'), []);
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
         {/* Header */}
         <View style={styles.headerContainer}>
                     <View style={styles.headerRow}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                             <Ionicons name="chevron-back" size={24} color="#1F2937" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
-                        <View style={styles.progressTrack}>
-                            <View style={[styles.progressFill, { width: `${headerProgress * 100}%` }]} />
-                        </View>
+                        <ProgressBar screen="login" noContainer={true} />
                     </View>
                 </View>
         {/* Title */}

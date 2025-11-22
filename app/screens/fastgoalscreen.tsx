@@ -1,29 +1,28 @@
+import ProgressBar from '@/components/ProgressBar';
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getProgressForScreen } from "@/utils/progressUtils";
 
 const { width } = Dimensions.get("window");
 
 export default function FastGoalScreen() {
   const router = useRouter();
 
-  const minWeight = 0.1;
+  const minWeight = 0.1;  
   const maxWeight = 1.5;
   const [currentWeight, setCurrentWeight] = useState(0.8);
 
   // 🔹 Static header progress (e.g. step 2 of 4)
-  const headerProgress = useMemo(() => getProgressForScreen('fast-goal'), []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,19 +30,15 @@ export default function FastGoalScreen() {
         {/* 🔹 Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Fixed progress bar */}
-            <View style={styles.progressTrack}>
-              <View
-                style={[styles.progressFill, { width: `${headerProgress * 100}%` }]}
-              />
-            </View>
+              <ProgressBar screen="fast-goal" noContainer={true} />
           </View>
         </View>
 

@@ -1,25 +1,25 @@
 // @ts-nocheck
 /** @jsxImportSource react */
+import ProgressBar from '@/components/ProgressBar';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
-  Defs,
-  G,
-  Line,
-  LinearGradient,
-  Path,
-  Stop,
+    Defs,
+    G,
+    Line,
+    LinearGradient,
+    Path,
+    Stop,
 } from "react-native-svg";
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 48; // Card total width
@@ -57,7 +57,6 @@ const growthLabels = ["2 Days", "5 Days", "7 Days", "30 Days"];
 
 export default function PotentialScreen() {
   const router = useRouter();
-  const headerProgress = useMemo(() => getProgressForScreen('potential'), []);
 
   const curvedPath = React.useMemo(() => createSmoothCurve(chartPoints), []);
   const filledPath = `${curvedPath} L ${CHART_WIDTH},${CHART_HEIGHT} L 0,${CHART_HEIGHT} Z`;
@@ -73,21 +72,14 @@ export default function PotentialScreen() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="chevron-back" size={22} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <View style={styles.progressTrack}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${headerProgress * 100}%` },
-                ]}
-              />
-            </View>
+            <ProgressBar screen="potential" noContainer={true} />
           </View>
         </View>
 

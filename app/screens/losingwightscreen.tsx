@@ -1,22 +1,21 @@
-import { getProgressForScreen } from "@/utils/progressUtils";
-import React, { useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import ProgressBar from '@/components/ProgressBar';
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import React from "react";
+import {
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
 export default function RealisticTargetScreen() {
   const router = useRouter();
 
-  const headerProgress = useMemo(() => getProgressForScreen('losing-weight'), []);
 //   const targetWeight = 09.9;
 
   return (
@@ -25,18 +24,14 @@ export default function RealisticTargetScreen() {
         {/* 🔹 Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="chevron-back" size={22} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <View style={styles.progressTrack}>
-              <View
-                style={[styles.progressFill, { width: `${headerProgress * 100}%` }]}
-              />
-            </View>
+            <ProgressBar screen="losing-weight" noContainer={true} />
           </View>
         </View>
 

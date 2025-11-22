@@ -1,8 +1,9 @@
+import ProgressBar from '@/components/ProgressBar';
 import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,7 +12,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -29,19 +29,13 @@ const WORKOUT_OPTIONS: ReadonlyArray<{
 export default function WorkoutFrequencyScreen() {
   const router = useRouter();
   const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
-  const progress = useMemo(() => getProgressForScreen('workout-frequency'), []);
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
-
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-            </View>
+            
+            <ProgressBar screen="workout-frequency" noContainer={true} />
           </View>
         </View>
 

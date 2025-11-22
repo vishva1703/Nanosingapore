@@ -1,4 +1,5 @@
-import { getProgressForScreen } from "@/utils/progressUtils";
+import ProgressBar from '@/components/ProgressBar';
+import Ruler from "@/components/Ruler";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
@@ -12,7 +13,6 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ruler from "@/components/Ruler";
 
 const { width } = Dimensions.get("window");
 const SMALL_TICKS_PER_KG = 5;
@@ -23,7 +23,6 @@ const END_WEIGHT = 140;
 export default function DesiredWeightScreen() {
   const router = useRouter();
   const [selectedWeight, setSelectedWeight] = useState(48);
-    const progress = useMemo(() => getProgressForScreen('desired'), []);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
@@ -55,23 +54,24 @@ export default function DesiredWeightScreen() {
         {/* 🔹 New Unified Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {!isFromSettings ? (
-                <View style={styles.progressTrack}>
-              <View
-                style={[styles.progressFill, { width: `${progress * 100}%` }]}
-              />
-            </View>
+                <ProgressBar screen="desired" noContainer={true} />
               ) : (
+                <View style={styles.headerRow}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                  <Ionicons name="chevron-back" size={24} color="#1F2937" />
+                </TouchableOpacity>
                 <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
                   Edit weight goal
                 </Text>
+                </View>
               )}
           </View>
         </View>

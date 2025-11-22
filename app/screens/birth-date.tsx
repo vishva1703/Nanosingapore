@@ -1,5 +1,6 @@
+import ProgressBar from '@/components/ProgressBar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
@@ -10,8 +11,6 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from "expo-router";
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 const ITEM_HEIGHT = 50;
 const VISIBLE_ITEMS = 5;
@@ -45,7 +44,6 @@ export default function BirthDateScreen() {
     const [month, setMonth] = useState(today.getMonth());
     const [year, setYear] = useState(today.getFullYear());
     const [day, setDay] = useState(today.getDate());
-    const progress = useMemo(() => getProgressForScreen('birth-date'), []);
     const { from } = useLocalSearchParams();
     const isFromSettings = from === "settings";
 
@@ -216,20 +214,22 @@ export default function BirthDateScreen() {
             <View style={styles.wrapper}>
                 <View style={styles.headerContainer}>
                     <View style={styles.headerRow}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                             <Ionicons name="chevron-back" size={24} color="#1F2937" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                         {!isFromSettings ? (
                             // PROGRESS BAR UI
-                            <View style={styles.progressTrack}>
-                                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                            </View>
+                            <ProgressBar screen="birth-date" noContainer={true} />
                         ) : (
-                            // TITLE FOR SETTINGS
+                            <View style={styles.headerRow}>
+                            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                              <Ionicons name="chevron-back" size={24} color="#1F2937" />
+                            </TouchableOpacity>
                             <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
                                  Set Birthday
                             </Text>
+                            </View>
                         )}
                     </View>
                 </View>

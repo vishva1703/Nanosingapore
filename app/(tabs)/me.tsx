@@ -1,26 +1,26 @@
 import ActiveMinutesChart from '@/components/activemintuschart';
 import CalorieIntakeChart from '@/components/calorieintake';
 import GlucoseLevelChart from '@/components/Glucoselevelchart';
+import Ketonchart from '@/components/Ketonchart';
 import RestingHeartChart from '@/components/Restingheartchart';
 import SleepHourChart from '@/components/sleephourchart';
 import FastingHoursChart from '@/components/Totalfastingchart';
 import Weightchart from '@/components/Weightchart';
-import Ketonchart from '@/components/Ketonchart';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    Modal,
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
-import { router } from 'expo-router';
 
 interface CalendarDay {
     day: number;
@@ -29,7 +29,7 @@ interface CalendarDay {
 }
 
 export default function MeScreen() {
-    const [currentWeight] = useState(85);
+    const [currentWeight, setCurrentWeight] = useState(85);
     const [startedWeight] = useState(92);
     const [targetWeight, setTargetWeight] = useState(72);
     const [weeklyCalorieIntake] = useState(8400);
@@ -40,6 +40,19 @@ export default function MeScreen() {
     const [calendarModalVisible, setCalendarModalVisible] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [activeFilters, setActiveFilters] = useState<('fasting' | 'calLogged' | 'activity')[]>([]);
+    const params = useLocalSearchParams();
+
+    // Update weight when coming back from weight screen
+    useFocusEffect(
+        useCallback(() => {
+            if (params.weight) {
+                const weightValue = parseFloat(params.weight as string);
+                if (!isNaN(weightValue) && weightValue >= 40 && weightValue <= 160) {
+                    setCurrentWeight(weightValue);
+                }
+            }
+        }, [params.weight])
+    );
 
     // Calculate progress percentage
     const totalWeightLoss = startedWeight - targetWeight;
@@ -137,7 +150,6 @@ export default function MeScreen() {
             updatedCalendar[index] = {
                 ...updatedCalendar[index],
                 isSelected: !updatedCalendar[index].isSelected,
-                status: updatedCalendar[index].isSelected ? 'empty' : 'empty' 
             };
             setFullMonthCalendar(updatedCalendar);
         } else {
@@ -146,7 +158,6 @@ export default function MeScreen() {
             updatedCalendar[index] = {
                 ...updatedCalendar[index],
                 isSelected: !updatedCalendar[index].isSelected,
-                status: updatedCalendar[index].isSelected ? 'empty' : 'empty' // Keep as empty when selected
             };
             setCalendarDays(updatedCalendar);
         }
@@ -264,50 +275,93 @@ export default function MeScreen() {
                                 </>
                             )}
 
-                            {/* Two statuses - 50% each */}
+                            {/* Two statuses - 50% each (Left/Right split) */}
                             {statusCount === 2 && (
                                 <>
-                                    {hasFasting && (
-                                        <Circle
-                                            cx="50"
-                                            cy="50"
-                                            r="45"
-                                            stroke="#4B3AAC"
-                                            strokeWidth="8"
-                                            fill="none"
-                                            strokeDasharray="50 50"
-                                            strokeDashoffset="0"
-                                            transform="rotate(-90 50 50)"
-                                        />
+                                    {/* Purple + Green (Fasting + Cal Logged) */}
+                                    {hasFasting && hasCalLogged && (
+                                        <>
+                                            {/* First Half */}
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#4B3AAC"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset="0"
+                                                transform="rotate(-90 50 50)"
+                                            />
+
+                                            {/* Second Half */}
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#10B981"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset={Math.PI * 45}
+                                                transform="rotate(-90 50 50)"
+                                            />
+                                        </>
                                     )}
-                                    {hasCalLogged && (
-                                        <Circle
-                                            cx="50"
-                                            cy="50"
-                                            r="45"
-                                            stroke="#10B981"
-                                            strokeWidth="8"
-                                            fill="none"
-                                            strokeDasharray="50 50"
-                                            strokeDashoffset={hasFasting ? "-50" : "0"}
-                                            transform="rotate(-90 50 50)"
-                                        />
+
+                                    {/* Purple + Light Green (Fasting + Activity) */}
+                                    {hasFasting && hasActivity && (
+                                        <>
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#4B3AAC"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset="0"
+                                                transform="rotate(-90 50 50)"
+                                            />
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#34D399"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset={Math.PI * 45}
+                                                transform="rotate(-90 50 50)"
+                                            />
+                                        </>
                                     )}
-                                    {hasActivity && (
-                                        <Circle
-                                            cx="50"
-                                            cy="50"
-                                            r="45"
-                                            stroke="#34D399"
-                                            strokeWidth="8"
-                                            fill="none"
-                                            strokeDasharray="50 50"
-                                            strokeDashoffset={
-                                                (hasFasting && hasCalLogged) ? "0" :
-                                                    (hasFasting || hasCalLogged) ? "-50" : "0"
-                                            }
-                                            transform="rotate(-90 50 50)"
-                                        />
+                                    {/* Green + Light Green (Cal Logged + Activity) */}
+                                    {hasCalLogged && hasActivity && (
+                                        <>
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#10B981"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset="0"
+                                                transform="rotate(-90 50 50)"
+                                            />
+                                            <Circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                stroke="#34D399"
+                                                strokeWidth="8"
+                                                fill="none"
+                                                strokeDasharray={`${Math.PI * 45} ${Math.PI * 45}`}
+                                                strokeDashoffset={Math.PI * 45}
+                                                transform="rotate(-90 50 50)"
+                                            />
+                                        </>
                                     )}
                                 </>
                             )}
@@ -315,6 +369,7 @@ export default function MeScreen() {
                             {/* Three statuses - 33.33% each */}
                             {statusCount === 3 && (
                                 <>
+                                    {/* Segment 1 */}
                                     <Circle
                                         cx="50"
                                         cy="50"
@@ -322,10 +377,12 @@ export default function MeScreen() {
                                         stroke="#4B3AAC"
                                         strokeWidth="8"
                                         fill="none"
-                                        strokeDasharray="33.33 66.67"
+                                        strokeDasharray={`${(2 * Math.PI * 45) / 3} ${(2 * Math.PI * 45) * (2 / 3)}`}
                                         strokeDashoffset="0"
                                         transform="rotate(-90 50 50)"
                                     />
+
+                                    {/* Segment 2 */}
                                     <Circle
                                         cx="50"
                                         cy="50"
@@ -333,10 +390,12 @@ export default function MeScreen() {
                                         stroke="#10B981"
                                         strokeWidth="8"
                                         fill="none"
-                                        strokeDasharray="33.33 66.67"
-                                        strokeDashoffset="-33.33"
+                                        strokeDasharray={`${(2 * Math.PI * 45) / 3} ${(2 * Math.PI * 45) * (2 / 3)}`}
+                                        strokeDashoffset={-(2 * Math.PI * 45) / 3}
                                         transform="rotate(-90 50 50)"
                                     />
+
+                                    {/* Segment 3 */}
                                     <Circle
                                         cx="50"
                                         cy="50"
@@ -344,8 +403,8 @@ export default function MeScreen() {
                                         stroke="#34D399"
                                         strokeWidth="8"
                                         fill="none"
-                                        strokeDasharray="33.33 66.67"
-                                        strokeDashoffset="-66.67"
+                                        strokeDasharray={`${(2 * Math.PI * 45) / 3} ${(2 * Math.PI * 45) * (2 / 3)}`}
+                                        strokeDashoffset={-((2 * Math.PI * 45) * 2) / 3}
                                         transform="rotate(-90 50 50)"
                                     />
                                 </>
@@ -435,7 +494,10 @@ export default function MeScreen() {
                                     <Text style={styles.progressLabel}>Current Weight</Text>
                                     <Text style={styles.progressValue}>{currentWeight}kg</Text>
 
-                                    <TouchableOpacity style={styles.logWeightButton} onPress={() => router.push("/screen1/profile/weightScreen")}>
+                                    <TouchableOpacity style={styles.logWeightButton} onPress={() => router.push({
+                                        pathname: "/screen1/profile/weightScreen",
+                                        params: { currentWeight: currentWeight.toString() }
+                                    })}>
                                         <Text style={styles.logWeightButtonText}>Log weight</Text>
                                     </TouchableOpacity>
                                 </View>

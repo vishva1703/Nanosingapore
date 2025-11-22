@@ -1,21 +1,20 @@
-import { getProgressForScreen } from "@/utils/progressUtils";
-import React, { useMemo } from "react";
+import ProgressBar from '@/components/ProgressBar';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
 export default function GreatingsScreen() {
   const router = useRouter();
-  const headerProgress = useMemo(() => getProgressForScreen('greeting'), []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -23,21 +22,14 @@ export default function GreatingsScreen() {
         {/* 🔹 Header Progress */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="chevron-back" size={22} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <View style={styles.progressTrack}>
-            <View
-                style={[
-                  styles.progressFill,
-                  { width: `${headerProgress * 100}%` },
-                ]}
-              />            
-              </View>
+            <ProgressBar screen="greeting" noContainer={true} />
           </View>
         </View>
 

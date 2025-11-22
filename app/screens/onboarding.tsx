@@ -1,7 +1,9 @@
+import ProgressBar from '@/components/ProgressBar';
+import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -11,8 +13,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
-import { getProgressForScreen } from '@/utils/progressUtils';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: 'https://flagcdn.com/w40/gb.png' },
@@ -29,7 +29,6 @@ export default function OnboardingScreen() {
   );
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
-  const progress = useMemo(() => getProgressForScreen('onboarding'), []);
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
   
@@ -39,18 +38,21 @@ export default function OnboardingScreen() {
         {/* Fixed Header at Top */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {!isFromSettings ? (
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
+                <ProgressBar screen="onboarding" noContainer={true} />
               ) : (
-                <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
-                  Set Gender
-                </Text>
+                <View style={styles.headerRow}>
+                  <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={RFValue(24)} color="#1F2937" />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: RFValue(20), fontWeight: "600", marginLeft: wp('3%') }}>
+                    Set Gender
+                  </Text>
+                </View>
               )}
 
             {!isFromSettings && (
@@ -60,7 +62,7 @@ export default function OnboardingScreen() {
             >
               <View style={styles.languageRow}>
                 <Image source={{ uri: selectedLanguage.flag }} style={styles.flagIcon} />
-                <Ionicons name="chevron-down" size={16} color="#4B5563" style={{ marginLeft: 4 }} />
+                <Ionicons name="chevron-down" size={RFValue(16)} color="#4B5563" style={{ marginLeft: wp('1%') }} />
               </View>
             </TouchableOpacity>
             )}
@@ -158,7 +160,7 @@ export default function OnboardingScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Language</Text>
               <TouchableOpacity onPress={() => setLanguageModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#111827" />
+                <Ionicons name="close" size={RFValue(22)} color="#111827" />
               </TouchableOpacity>
             </View>
 
@@ -176,7 +178,7 @@ export default function OnboardingScreen() {
                     <Text style={styles.modalItemText}>{lang.label}</Text>
                   </View>
                   {selectedLanguage.code === lang.code && (
-                    <Ionicons name="checkmark" size={18} color="#4B3AAC" />
+                    <Ionicons name="checkmark" size={RFValue(18)} color="#4B3AAC" />
                   )}
                 </TouchableOpacity>
                 {index !== LANGUAGES.length - 1 && <View style={styles.divider} />}
@@ -200,19 +202,19 @@ const styles = StyleSheet.create({
 
   /** HEADER **/
   headerContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: wp('6%'),
+    paddingVertical: hp('2%'),
     backgroundColor: '#F9FAFB',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: wp('2%'),
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
+    width: wp('10%'),
+    height: hp('5%'),
+    borderRadius: wp('5.5%'),
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
@@ -221,8 +223,8 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 8,
-    borderRadius: 3,
+    height: hp('1%'),
+    borderRadius: wp('0.75%'),
     backgroundColor: '#E5E7EB',
     overflow: 'hidden',
   },
@@ -231,9 +233,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#4B3AAC',
   },
   languagePicker: {
-    width: 80,
-    height: 40,
-    borderRadius: 22,
+    width: wp('20%'),
+    height: hp('5%'),
+    borderRadius: wp('5.5%'),
     borderWidth: 1,
     borderColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
@@ -245,9 +247,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   flagIcon: {
-    width: 24,
-    height: 18,
-    borderRadius: 4,
+    width: wp('6%'),
+    height: hp('2.25%'),
+    borderRadius: wp('1%'),
   },
 
   /** CONTENT CONTAINER **/
@@ -260,47 +262,47 @@ const styles = StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: wp('6%'),
     paddingTop: 0,
-    paddingBottom: 120,
-    gap: 28,
+    paddingBottom: hp('15%'),
+    gap: hp('3.5%'),
   },
   centeredScrollContent: {
     justifyContent: 'center',
-    paddingBottom: 100, // Space for bottom button
+    paddingBottom: hp('12.5%'), // Space for bottom button
   },
 
   section: {
-    marginBottom: 8,
+    marginBottom: hp('1%'),
   },
   sectionLabel: {
-    marginBottom: 8,
-    fontSize: 26,
+    marginBottom: hp('1%'),
+    fontSize: RFValue(26),
     fontWeight: '700',
     color: '#111827',
   },
   helperText: {
-    fontSize: 15,
+    fontSize: RFValue(15),
     color: '#6B7280',
-    marginTop: 4,
-    lineHeight: 22,
+    marginTop: hp('0.5%'),
+    lineHeight: RFValue(22),
   },
   optionList: {
-    gap: 14,
+    gap: hp('1.75%'),
   },
   centeredOptionList: {
     marginTop: 0,
   },
   optionButton: {
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('3.5%'),
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
     shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: wp('1.5%'),
+    shadowOffset: { width: 0, height: hp('0.375%') },
   },
   selectedOption: {
     backgroundColor: '#4B3AAC',
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: RFValue(16),
     color: '#1F2937',
   },
   selectedOptionText: {
@@ -319,30 +321,30 @@ const styles = StyleSheet.create({
   /** BOTTOM BUTTON **/
   bottomContainer: {
     position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
+    bottom: hp('3%'),
+    left: wp('6%'),
+    right: wp('6%'),
   },
   settingsBottomContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: wp('6%'),
+    paddingVertical: hp('2%'),
     backgroundColor: '#F9FAFB',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
   primaryCta: {
     backgroundColor: '#4B3AAC',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: hp('2%'),
+    borderRadius: wp('3.5%'),
     alignItems: 'center',
     shadowColor: '#4B3AAC',
     shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: wp('2.5%'),
+    shadowOffset: { width: 0, height: hp('0.5%') },
   },
   primaryCtaText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '600',
     letterSpacing: 0.3,
   },
@@ -355,19 +357,19 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    borderTopLeftRadius: wp('6%'),
+    borderTopRightRadius: wp('6%'),
+    paddingHorizontal: wp('5%'),
+    paddingVertical: hp('2%'),
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: hp('1.5%'),
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: RFValue(18),
     fontWeight: '700',
     color: '#111827',
   },
@@ -375,15 +377,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: hp('1.5%'),
   },
   modalItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: wp('3%'),
   },
-  modalItemText: {
-    fontSize: 16,
+  modalItemText: {    
+    fontSize: RFValue(16),
     color: '#111827',
   },
   divider: {
