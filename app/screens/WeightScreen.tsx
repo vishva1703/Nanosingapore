@@ -1,15 +1,17 @@
+import wellnessApi from '@/api/wellnessApi';
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated,
-    FlatList,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  FlatList,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -287,7 +289,7 @@ export default function HeightWeightScreen() {
       <View style={styles.wrapper}>
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-              {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            {/* <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="chevron-back" size={24} color="#1F2937" />
               </TouchableOpacity> */}
 
@@ -295,12 +297,12 @@ export default function HeightWeightScreen() {
               <ProgressBar screen="weight" noContainer={true} />
             ) : (
               <View style={styles.headerRow}>
-              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="chevron-back" size={24} color="#1F2937" />
-              </TouchableOpacity>
-              <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
-                Set Height and Weight
-              </Text>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                  <Ionicons name="chevron-back" size={24} color="#1F2937" />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
+                  Set Height and Weight
+                </Text>
               </View>
             )}
           </View>
@@ -390,7 +392,35 @@ export default function HeightWeightScreen() {
           <View style={styles.bottomContainer}>
             <TouchableOpacity
               style={[styles.primaryCta, { opacity: 1 }]}
-              onPress={() => {
+              onPress={async () => {
+                // Calculate weight in both units
+                const weightKg = unit === 'metric' ? weight : lbToKg(weight);
+                const weightLbs = unit === 'imperial' ? weight : kgToLb(weight);
+
+                // Save height, weight, and unit system
+                try {
+                  await saveOnboardingData({
+                    unitSystem: unit === 'metric' ? "Metric" : "Imperial",
+                    height: {
+                      cm: height,
+                      feet: heightFt,
+                      inches: heightIn,
+                    },
+                    weight: {
+                      kg: weightKg,
+                      lbs: weightLbs,
+                    },
+                  });
+                  console.log("✅ Saved height, weight, and unit system");
+                  console.log("  - Unit:", unit === 'metric' ? "Metric" : "Imperial");
+                  console.log("  - Height (cm):", height);
+                  console.log("  - Height (ft/in):", heightFt, "ft", heightIn, "in");
+                  console.log("  - Weight (kg):", weightKg);
+                  console.log("  - Weight (lbs):", weightLbs);
+                } catch (error) {
+                  console.error("Error saving height/weight:", error);
+                }
+
                 const heightInMeters = height / 100;
                 const idealWeight = Math.round(22 * heightInMeters * heightInMeters);
 
@@ -407,7 +437,27 @@ export default function HeightWeightScreen() {
           <View style={styles.settingsBottomContainer}>
             <TouchableOpacity
               style={[styles.primaryCta, { opacity: 1 }]}
-              onPress={() => router.back()}
+              onPress={async () => {
+                try {
+                  const heightCm = unit === 'metric' ? height : imperialToCm(heightFt, heightIn);
+                  const weightKg = unit === 'metric' ? weight : lbToKg(weight);
+
+                  const weightLbs = unit === 'imperial' ? weight : kgToLb(weight);
+
+                  await wellnessApi.setHeightWeight(
+                    heightCm,
+                    heightFt,
+                    heightIn,
+                    weightKg,
+                    weightLbs
+                  );
+
+
+                  router.back();
+                } catch (error) {
+                  console.log("Error updating height and weight:", error);
+                }
+              }}
             >
               <Text style={styles.primaryCtaText}>Save</Text>
             </TouchableOpacity>
@@ -422,15 +472,15 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
   wrapper: { flex: 1 },
 
-  headerContainer: { 
-    paddingHorizontal: 24, 
+  headerContainer: {
+    paddingHorizontal: 24,
     paddingVertical: 16,
     paddingBottom: 16,
   },
-  headerRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 8 
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
   },
   backButton: {
     width: 40,
@@ -449,9 +499,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
     overflow: 'hidden',
   },
-  progressFill: { 
-    height: '100%', 
-    backgroundColor: '#4B3AAC' 
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4B3AAC'
   },
 
   // Content container styles
@@ -463,21 +513,21 @@ const styles = StyleSheet.create({
     marginBottom: 100, // Add space for the bottom button
   },
 
-  titleContainer: { 
-    paddingHorizontal: 24, 
+  titleContainer: {
+    paddingHorizontal: 24,
     marginBottom: 16,
     marginTop: 20,
   },
-  sectionLabel: { 
-    fontSize: 26, 
-    fontWeight: '700', 
-    color: '#111827' 
+  sectionLabel: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827'
   },
-  helperText: { 
-    fontSize: 15, 
-    color: '#6B7280', 
-    lineHeight: 22, 
-    marginTop: 4 
+  helperText: {
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
+    marginTop: 4
   },
 
   switchContainer: {
@@ -491,13 +541,13 @@ const styles = StyleSheet.create({
   centeredSwitchContainer: {
     marginTop: 0,
   },
-  switchLabel: { 
-    fontSize: 14, 
-    fontWeight: '500', 
-    color: '#6B7280' 
+  switchLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280'
   },
-  switchActive: { 
-    color: '#111827' 
+  switchActive: {
+    color: '#111827'
   },
 
   horizontalRow: {
@@ -544,11 +594,11 @@ const styles = StyleSheet.create({
   },
 
   // Bottom containers
-  bottomContainer: { 
-    position: 'absolute', 
-    bottom: 24, 
-    left: 24, 
-    right: 24 
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    right: 24
   },
   settingsBottomContainer: {
     paddingHorizontal: 24,
@@ -567,10 +617,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
-  primaryCtaText: { 
-    color: '#FFFFFF', 
-    fontSize: 16, 
-    fontWeight: '600', 
-    letterSpacing: 0.3 
+  primaryCtaText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3
   },
 });

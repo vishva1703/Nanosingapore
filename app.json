@@ -1,5 +1,16 @@
 {
   "expo": {
+    "scheme": "com.calai",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.calai",
+      "googleServicesFile": "./google-services.json"
+    },
+    "ios": {
+      "bundleIdentifier": "com.calai.ai",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "usesAppleSignIn": true
+    },
     "icon": "./assets/images/logo.png",
     "plugins": [
       "expo-router",
@@ -12,6 +23,12 @@
           "backgroundColor": "#E6F4FE"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b6dcb093-4243-43a3-ba16-e06ac26010d0"
+      }
+    }
   }
 }

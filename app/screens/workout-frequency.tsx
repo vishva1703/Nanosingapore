@@ -1,4 +1,5 @@
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -150,10 +151,34 @@ export default function WorkoutFrequencyScreen() {
           <TouchableOpacity
             style={[styles.primaryCta, !selectedFrequency && { opacity: 0.6 }]}
             disabled={!selectedFrequency}
-            onPress={() => router.push({
-              pathname: "/screens/WeightScreen",
-              params: { from: "workout-frequency" }
-            })}
+            onPress={async () => {
+              // Map workout frequency to activity level
+              let activityLevel = "sedentary"; // default
+              if (selectedFrequency === '0-2') {
+                activityLevel = "sedentary";
+              } else if (selectedFrequency === '3-5') {
+                activityLevel = "moderately_active";
+              } else if (selectedFrequency === '6+') {
+                activityLevel = "very_active";
+              }
+
+              // Save activity level data before navigating
+              if (selectedFrequency) {
+                try {
+                  await saveOnboardingData({
+                    activityLevel: activityLevel,
+                  });
+                  console.log("✅ Saved activity level:", activityLevel);
+                } catch (error) {
+                  console.error("Error saving activity level:", error);
+                }
+              }
+              
+              router.push({
+                pathname: "/screens/WeightScreen",
+                params: { from: "workout-frequency" }
+              });
+            }}
           >
             <Text style={styles.primaryCtaText}>Next</Text>
           </TouchableOpacity>

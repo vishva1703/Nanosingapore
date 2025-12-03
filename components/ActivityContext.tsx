@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 export interface Activity {
   id: string;
@@ -9,6 +9,7 @@ export interface Activity {
   description?: string;
   time: string;
   date: string;
+  logId?: string; // API logId for backend operations
 }
 
 interface ActivityContextType {
@@ -41,7 +42,7 @@ export const ActivityProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const deleteActivity = (id: string) => {
-    setActivities(prev => prev.filter(a => a.id !== id));
+    setActivities(prev => prev.filter(a => a.id !== id && a.logId !== id));
   };
 
   const clearActivities = () => {

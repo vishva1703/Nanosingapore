@@ -1,26 +1,104 @@
+import wellnessApi from "@/api/wellnessApi";
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
 
 export default function LogCaloriesScreen() {
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
-  const [weight, setWeight] = useState("");
+  const [calories, setCalories] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Format date to ISO format (YYYY-MM-DD)
+  const formatDateToISO = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Format time to ISO format (HH:MM:SS)
+  const formatTimeToISO = (time: Date): string => {
+    const hours = String(time.getHours()).padStart(2, '0');
+    const minutes = String(time.getMinutes()).padStart(2, '0');
+    const seconds = String(time.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  // Handle save calories
+  const handleSaveCalories = async () => {
+    // Validate calories input
+    if (!calories || calories.trim() === '') {
+      Alert.alert('Validation Error', 'Please enter calories.');
+      return;
+    }
+
+    const caloriesValue = parseFloat(calories);
+    if (isNaN(caloriesValue) || caloriesValue <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid calories value.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Format date and time
+      const dateISO = formatDateToISO(date);
+      const timeISO = formatTimeToISO(time);
+
+      console.log('[logcalories] Logging calories:', {
+        date: dateISO,
+        time: timeISO,
+        calories: caloriesValue
+      });
+
+      // Call API
+      const response = await wellnessApi.logCalories({
+        date: dateISO,
+        time: timeISO,
+        calories: caloriesValue,
+      });
+
+      console.log('[logcalories] Calories logged successfully:', response);
+
+      // Show success message and navigate back
+      Alert.alert(
+        'Success',
+        'Calories logged successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('[logcalories] Error logging calories:', error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error?.message || 'Failed to log calories. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -74,14 +152,14 @@ export default function LogCaloriesScreen() {
               </Text>
             </TouchableOpacity>
   
-            {/* WEIGHT INPUT */}
+            {/* CALORIES INPUT */}
             <View style={[styles.row, { borderBottomWidth: 0 }]}>
               <Text style={styles.label}>Calories</Text>
               <View style={styles.weightInputWrapper}>
                 <TextInput
                   placeholder="0"
-                  value={weight}
-                  onChangeText={setWeight}
+                  value={calories}
+                  onChangeText={setCalories}
                   keyboardType="decimal-pad"
                   style={styles.weightInput}
                 />
@@ -97,8 +175,16 @@ export default function LogCaloriesScreen() {
   
         {/* FIXED BOTTOM BUTTON */}
         <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => router.push("/screen1/profile/logglucose")}>
-            <Text style={styles.buttonText}>Save calories</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSaveCalories}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Save calories</Text>
+            )}
           </TouchableOpacity>
         </View>
   
@@ -199,6 +285,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "600",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   rowlabel: {
     fontSize: 16,

@@ -1,14 +1,50 @@
+import wellnessApi from "@/api/wellnessApi";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
-import { useRouter } from "expo-router";
+
+// Format date for API (YYYY-MM-DD)
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Format date for display (e.g., "16 Nov")
+const formatDateForDisplay = (date: Date): string => {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// Format minutes to hours and minutes (e.g., 1581 minutes -> "26h 21m")
+const formatMinutesToHoursMinutes = (totalMinutes: number): string => {
+  if (totalMinutes === 0) return "0m";
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes}m`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h ${minutes}m`;
+  }
+};
 
 export default function ActiveMinutesChart() {
   const [activeTab, setActiveTab] = useState("Yearly");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [data, setData] = useState<Array<{ value: number; label: string; goal?: boolean }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [average, setAverage] = useState(0);
   const router = useRouter();
   // Generate year based on currentWeekOffset
   const getYear = () => {
@@ -20,18 +56,189 @@ export default function ActiveMinutesChart() {
 
   const year = getYear();
 
-  const data = [
-    { value: 68, label: "16 Nov" },
-    { value: 72, label: "17 Nov" },
-    { value: 60, label: "18 Nov" },
-    { value: 90, label: "19 Nov", goal: true }, // goal day
-    { value: 50, label: "20 Nov" },
-    { value: 40, label: "21 Nov" },
-  ];
+  /**
+   * Fetch activity chart data from the API
+   */
+  const fetchActivityChartData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Calculate week start and end dates based on currentWeekOffset
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 6 + (currentWeekOffset * 7)); // Start of week (7 days ago from today)
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6); // End of week
 
-  // Calculate average from data
-  const average = Math.round(
-    data.reduce((sum, item) => sum + item.value, 0) / data.length
+      const sDate = formatDate(startDate);
+      const eDate = formatDate(endDate);
+
+      console.log('[ActiveMinutesChart] Fetching activity chart data:', { sDate, eDate, trend: 'weekly' });
+
+      // Fetch activity chart data from API
+      const response = await wellnessApi.getActivityChart({
+        sDate,
+        eDate,
+        trend: 'weekly',
+      });
+
+      console.log('[ActiveMinutesChart] Activity chart API response:', JSON.stringify(response, null, 2));
+
+      // Transform API response to chart data format
+      // API returns: { data: { min: [{ date: "23", min: 0 }, ...], average: 1581 } }
+      let minutesData: any[] = [];
+      let responseAverage = null;
+      let responseGoal = null;
+      
+      // Handle the actual API response structure
+      if (response) {
+        // Primary pattern: response.data.min (aggregated minutes per day)
+        if (response.data) {
+          if (Array.isArray(response.data.min)) {
+            minutesData = response.data.min;
+            console.log('[ActiveMinutesChart] Found data in response.data.min');
+          } else if (response.data.data && Array.isArray(response.data.data.min)) {
+            minutesData = response.data.data.min;
+            console.log('[ActiveMinutesChart] Found data in response.data.data.min');
+          } else if (Array.isArray(response.data.list)) {
+            minutesData = response.data.list;
+            console.log('[ActiveMinutesChart] Found data in response.data.list');
+          } else if (Array.isArray(response.data)) {
+            minutesData = response.data;
+            console.log('[ActiveMinutesChart] Found data array in response.data');
+          }
+          
+          if (response.data.average !== undefined) responseAverage = response.data.average;
+          if (response.data.goal !== undefined) responseGoal = response.data.goal;
+        }
+        
+        // Fallback patterns
+        if (minutesData.length === 0 && response.result) {
+          if (Array.isArray(response.result.min)) {
+            minutesData = response.result.min;
+          } else if (Array.isArray(response.result.list)) {
+            minutesData = response.result.list;
+          } else if (Array.isArray(response.result)) {
+            minutesData = response.result;
+          }
+          
+          if (response.result.average !== undefined) responseAverage = response.result.average;
+          if (response.result.goal !== undefined) responseGoal = response.result.goal;
+        }
+        
+        if (minutesData.length === 0 && Array.isArray(response.list)) {
+          minutesData = response.list;
+        }
+        
+        if (minutesData.length === 0 && Array.isArray(response)) {
+          minutesData = response;
+        }
+        
+        // Extract average and goal from top level if not found yet
+        if (responseAverage === null && response.average !== undefined) {
+          responseAverage = response.average;
+        }
+        if (responseGoal === null && response.goal !== undefined) {
+          responseGoal = response.goal;
+        }
+      }
+
+      console.log('[ActiveMinutesChart] Extracted minutes data:', minutesData);
+      console.log('[ActiveMinutesChart] Average:', responseAverage);
+      console.log('[ActiveMinutesChart] Goal:', responseGoal);
+
+      // Get the actual start date from API response if available
+      let apiStartDate = startDate;
+      if (response?.data?.startDate) {
+        apiStartDate = new Date(response.data.startDate);
+        console.log('[ActiveMinutesChart] Using API startDate:', response.data.startDate);
+      }
+
+      // Transform data to chart format
+      // API format: [{ date: "23", min: 0 }, { date: "24", min: 7260 }, ...]
+      // The date field is just the day number, we need to map it to actual dates
+      const chartData = minutesData.map((item: any, index: number) => {
+        let date: Date;
+        
+        if (item.date) {
+          // If date is just a day number (e.g., "23", "24")
+          if (item.date.length <= 2) {
+            const dayNum = parseInt(item.date, 10);
+            if (!isNaN(dayNum)) {
+              // Use the API's startDate to construct the full date
+              date = new Date(apiStartDate);
+              // Find which day of the week this corresponds to
+              // The min array is ordered, so index 0 = first day of week
+              date.setDate(apiStartDate.getDate() + index);
+            } else {
+              date = new Date(apiStartDate);
+              date.setDate(apiStartDate.getDate() + index);
+            }
+          } else {
+            // Full date string
+            date = new Date(item.date);
+          }
+        } else {
+          // Fallback: use index to calculate date from week start
+          date = new Date(apiStartDate);
+          date.setDate(apiStartDate.getDate() + index);
+        }
+        
+        const minutes = item.min || item.minutes || item.value || item.activeMinutes || 0;
+        
+        return {
+          value: minutes,
+          label: formatDateForDisplay(date),
+          goal: responseGoal && minutes >= responseGoal,
+        };
+      });
+
+      // If no data, create empty data for the week
+      if (chartData.length === 0) {
+        const weekData = [];
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + i);
+          weekData.push({
+            value: 0,
+            label: formatDateForDisplay(date),
+          });
+        }
+        setData(weekData);
+        setAverage(0);
+      } else {
+        setData(chartData);
+        
+        // Calculate average from data or use API average
+        if (responseAverage !== null && responseAverage !== undefined) {
+          setAverage(Math.round(responseAverage));
+        } else {
+          const calculatedAvg = Math.round(
+            chartData.reduce((sum, item) => sum + item.value, 0) / chartData.length
+          );
+          setAverage(calculatedAvg);
+        }
+      }
+    } catch (error: any) {
+      console.error('[ActiveMinutesChart] Error fetching activity chart data:', error);
+      // On error, show empty data
+      setData([]);
+      setAverage(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentWeekOffset]);
+
+  // Fetch data when component mounts or week offset changes
+  useEffect(() => {
+    fetchActivityChartData();
+  }, [fetchActivityChartData]);
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchActivityChartData();
+    }, [fetchActivityChartData])
   );
 
   const handlePreviousWeek = () => {
@@ -75,7 +282,7 @@ export default function ActiveMinutesChart() {
               Average
             </Text>
             <Text style={{ color: "#111", fontSize: RFValue(16), fontWeight: "600" }}>
-              {average}m
+              {formatMinutesToHoursMinutes(average)}
             </Text>
           </View>
 
@@ -125,35 +332,39 @@ export default function ActiveMinutesChart() {
           </View>
 
           <View style={{ flex: 1, position: "relative" }}>
-            <BarChart
-              data={data.map((item) => {
-                const baseItem: any = {
-                  value: item.value,
-                  label: item.label,
-                  frontColor: "#8D3CFF", // Black color for all bars
-                };
+            {loading ? (
+              <View style={{ height: hp('18%'), justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="small" color="#8D3CFF" />
+              </View>
+            ) : (
+              <BarChart
+                data={data.map((item) => {
+                  const baseItem: any = {
+                    value: item.value,
+                    label: item.label,
+                    frontColor: "#8D3CFF",
+                  };
 
-               
-
-                return baseItem;
-              })}
-              width={wp('70%')}
-              height={hp('18%')}
-              barWidth={wp('6.5%')}
-              spacing={wp('5.5%')}
-              barBorderRadius={wp('2%')}
-              roundedBottom={false}
-              yAxisThickness={0}
-              yAxisColor="#E5E7EB"
-              maxValue={90}
-              noOfSections={3}
-              yAxisLabelWidth={0}
-              hideRules={false}
-              rulesColor="#E5E7EB"
-              rulesType="solid"
-              initialSpacing={wp('2.5%')}
-              xAxisLabelTextStyle={{ fontSize: RFValue(11), color: "#444" }}
-            />
+                  return baseItem;
+                })}
+                width={wp('70%')}
+                height={hp('18%')}
+                barWidth={wp('6.5%')}
+                spacing={wp('5.5%')}
+                barBorderRadius={wp('2%')}
+                roundedBottom={false}
+                yAxisThickness={0}
+                yAxisColor="#E5E7EB"
+                maxValue={data.length > 0 ? Math.max(...data.map(d => d.value), 90) : 90}
+                noOfSections={3}
+                yAxisLabelWidth={0}
+                hideRules={false}
+                rulesColor="#E5E7EB"
+                rulesType="solid"
+                initialSpacing={wp('2.5%')}
+                xAxisLabelTextStyle={{ fontSize: RFValue(11), color: "#444" }}
+              />
+            )}
           </View>
         </View>
 
@@ -167,9 +378,9 @@ export default function ActiveMinutesChart() {
             flexWrap: "wrap",
           }}
         >
-<Text style={{ color: "#111", fontSize: RFValue(12) ,fontWeight: "600"}}>
-  Goal: <Text style={{  color: "#111" ,fontWeight: "400"}}>
-    {data[data.length - 1].value}
+<Text style={{ color: "#111", fontSize: RFValue(12), fontWeight: "600" }}>
+  Goal: <Text style={{ color: "#111", fontWeight: "400" }}>
+    {data.length > 0 ? data[data.length - 1].value : 0}m
   </Text>
 </Text>
           <TouchableOpacity

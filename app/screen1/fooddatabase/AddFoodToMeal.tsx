@@ -1,14 +1,16 @@
+import wellnessApi from "@/api/wellnessApi";
 import { useFood } from "@/components/FoodContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
@@ -19,34 +21,92 @@ export default function AddFoodToMeal() {
   const params = useLocalSearchParams();
   const { myFoods } = useFood();
   const [searchText, setSearchText] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
-  
-  // Sample recently logged foods - in real app, this would come from context/state
-  const [recentlyLoggedFoods] = useState([
-    {
-      id: "1",
-      name: "Jasmin rice",
-      brand: "Dream dinner",
-      calories: "450",
-      serving: "Serving",
-    },
-    {
-      id: "2",
-      name: "Brown rice",
-      brand: "Mahatma",
-      calories: "450",
-      serving: "cup, Cooked",
-    },
-    {
-      id: "3",
-      name: "Basmati rice",
-      brand: "",
-      calories: "450",
-      serving: "cup, Cooked",
-    },
-  ]);
+  const [activeTab, setActiveTab] = useState("mymeals");
+  const [meals, setMeals] = useState<any[]>([]);
+  const [loadingMeals, setLoadingMeals] = useState(false);
+    const fetchMeals = useCallback(async () => {
+    try {
+      setLoadingMeals(true);
+      const response = await wellnessApi.getMealList({
+        page: 1,
+        limit: 50,
+        search: searchText.trim()
+      });
 
-  const tabs = ["All", "My food", "Save scans"];
+      console.log("📋 Meal list response:", JSON.stringify(response, null, 2));
+      console.log("📋 Response structure check:", {
+        hasResponse: !!response,
+        responseKeys: response ? Object.keys(response) : [],
+        hasFlag: !!response?.flag,
+        hasMessage: !!response?.message,
+        hasData: !!response?.data,
+        dataKeys: response?.data ? Object.keys(response.data) : [],
+        hasList: !!response?.data?.list,
+        listIsArray: Array.isArray(response?.data?.list),
+        listLength: response?.data?.list?.length,
+      });
+
+      let mealsList: any[] = [];
+      
+      if (response?.data?.list !== undefined) {
+        if (Array.isArray(response.data.list)) {
+          mealsList = response.data.list;
+          console.log("✅ Meals loaded from response.data.list:", mealsList.length, "meals");
+        } else {
+          console.warn("⚠️ response.data.list exists but is not an array:", typeof response.data.list);
+        }
+      }
+      else if (response?.data && Array.isArray(response.data)) {
+        mealsList = response.data;
+        console.log("✅ Meals loaded from response.data (direct array):", mealsList.length, "meals");
+      }
+      else if (response?.list && Array.isArray(response.list)) {
+        mealsList = response.list;
+        console.log("✅ Meals loaded from response.list:", mealsList.length, "meals");
+      }
+      else if (Array.isArray(response)) {
+        mealsList = response;
+        console.log("✅ Meals loaded from direct array response:", mealsList.length, "meals");
+      }
+      else if (response?.data?.items && Array.isArray(response.data.items)) {
+        mealsList = response.data.items;
+        console.log("✅ Meals loaded from response.data.items:", mealsList.length, "meals");
+      }
+      else {
+        console.warn("⚠️ Could not find meal list in response");
+        console.warn("⚠️ Full response structure:", JSON.stringify(response, null, 2));
+        mealsList = [];
+      }
+      
+      console.log("📦 Final meals list:", mealsList.length, "meals");
+      setMeals(mealsList);
+    } catch (error: any) {
+      console.error("❌ Error fetching meals:", error);
+      setMeals([]);
+    } finally {
+      setLoadingMeals(false);
+    }
+  }, [searchText]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (activeTab === "mymeals") {
+        fetchMeals();
+      }
+    }, [activeTab, fetchMeals])
+  );
+
+  React.useEffect(() => {
+    if (activeTab === "mymeals") {
+      const timeoutId = setTimeout(() => {
+        fetchMeals();
+      }, 500); 
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchText, activeTab]);
+
+  const tabs = ["All", "My food", "My meals", "Save scans"];
 
   const filteredMyFoods = myFoods.filter((item: any) => {
     if (!searchText.trim()) return true;
@@ -58,18 +118,7 @@ export default function AddFoodToMeal() {
     );
   });
 
-  const filteredRecentlyLogged = recentlyLoggedFoods.filter((item) => {
-    if (!searchText.trim()) return true;
-    const searchLower = searchText.toLowerCase();
-    return (
-      item.name?.toLowerCase().includes(searchLower) ||
-      item.brand?.toLowerCase().includes(searchLower)
-    );
-  });
-
   const handleAddFood = (food: any) => {
-    // Pass the selected food back to CreateMeal via params
-    // Navigate back to CreateMeal with the food item as params
     router.push({
       pathname: "/screen1/fooddatabase/CreateMeal",
       params: {
@@ -87,11 +136,9 @@ export default function AddFoodToMeal() {
   };
 
   const handleViewFood = (food: any) => {
-    // Navigate to SelectedFood with all food details
     router.push({
       pathname: "/screen1/fooddatabase/SelectedFood",
       params: {
-        // Map food data to match SelectedFood expected format
         name: food.name || food.description || "",
         description: food.description || food.name || "",
         brand: food.brand || "",
@@ -120,7 +167,6 @@ export default function AddFoodToMeal() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={RFValue(24)} color="#1F2937" />
@@ -134,8 +180,7 @@ export default function AddFoodToMeal() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Search Input */}
-        <TextInput
+                <TextInput
           style={styles.searchInput}
           placeholder="Search foods..."
           placeholderTextColor="#999"
@@ -143,8 +188,6 @@ export default function AddFoodToMeal() {
           onChangeText={setSearchText}
           autoFocus={false}
         />
-
-        {/* Tabs */}
         <View style={styles.tabsContainer}>
           {tabs.map((tab) => {
             const tabKey = tab.toLowerCase().replace(" ", "");
@@ -170,53 +213,19 @@ export default function AddFoodToMeal() {
             );
           })}
         </View>
-
-        {/* Content Area */}
         {activeTab === "all" && (
           <View style={styles.contentContainer}>
-            {/* AI Generator Button */}
             <TouchableOpacity
               style={styles.aiGeneratorButton}
               onPress={() => {
-                // Handle AI generator action
                 console.log("AI Generator clicked");
               }}
             >
               <Ionicons name="sparkles-outline" size={RFValue(20)} color="#4B3AAC" />
               <Text style={styles.aiGeneratorButtonText}>AI generator</Text>
             </TouchableOpacity>
-
-            {/* Select from database section */}
             <Text style={styles.sectionTitle}>Select from database</Text>
-            {filteredRecentlyLogged.map((food) => (
-              <TouchableOpacity
-                key={food.id}
-                style={styles.foodItemCard}
-                onPress={() => handleViewFood(food)}
-              >
-                <View style={styles.foodItemContent}>
-                  <Text style={styles.foodItemName}>
-                    {food.name}
-                    {food.brand && ` • ${food.brand}`}
-                  </Text>
-                  <View style={styles.foodItemInfo}>
-                    <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
-                    <Text style={styles.foodItemDetails}>
-                      {food.calories} cal • {food.serving}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={styles.foodItemPlusButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleAddFood(food);
-                  }}
-                >
-                  <Text style={styles.foodItemPlusText}>+</Text>
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.emptyText}>Foods will be loaded from database</Text>
           </View>
         )}
 
@@ -254,6 +263,90 @@ export default function AddFoodToMeal() {
                   </TouchableOpacity>
                 </TouchableOpacity>
               ))
+            )}
+          </View>
+        )}
+
+        {activeTab === "mymeals" && (
+          <View style={styles.contentContainer}>
+            {loadingMeals ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4B3AAC" />
+                <Text style={styles.loadingText}>Loading meals...</Text>
+              </View>
+            ) : meals.length === 0 ? (
+              <Text style={styles.emptyText}>No meals found</Text>
+            ) : (
+              meals
+                .filter((meal: any) => {
+                  if (!searchText.trim()) return true;
+                  const searchLower = searchText.toLowerCase();
+                  const mealName = meal.description || meal.name || "";
+                  return mealName.toLowerCase().includes(searchLower);
+                })
+                .map((meal: any, index: number) => {
+                  const mealCalories = meal.calories || meal.nutrition?.calories || 0;
+                  const mealName = meal.description || meal.name || "Unnamed Meal";
+                  const mealItems = meal.mealItems || meal.items || [];
+                  
+                  return (
+                    <TouchableOpacity
+                      key={meal.id || meal._id || index}
+                      style={styles.foodItemCard}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/screen1/fooddatabase/CreateMeal",
+                          params: {
+                            mealId: meal.id || meal._id,
+                            mealName: mealName,
+                            ...meal,
+                          },
+                        });
+                      }}
+                    >
+                      <View style={styles.foodItemContent}>
+                        <View style={styles.mealHeader}>
+                          <Ionicons name="restaurant-outline" size={RFValue(16)} color="#4B3AAC" />
+                          <Text style={styles.foodItemName}>
+                            {mealName}
+                          </Text>
+                        </View>
+                        <View style={styles.foodItemInfo}>
+                          <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
+                          <Text style={styles.foodItemDetails}>
+                            {Math.round(mealCalories)} cal
+                          </Text>
+                          {mealItems.length > 0 && (
+                            <>
+                              <Text style={styles.foodItemDetails}> • </Text>
+                              <Text style={styles.foodItemDetails}>
+                                {mealItems.length} item{mealItems.length !== 1 ? 's' : ''}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.foodItemPlusButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleAddFood({
+                            id: meal.id || meal._id,
+                            name: mealName,
+                            description: mealName,
+                            calories: String(mealCalories),
+                            protein: String(meal.protein || meal.nutrition?.protein || 0),
+                            carbs: String(meal.carbs || meal.nutrition?.carbs || 0),
+                            fat: String(meal.fat || meal.nutrition?.fat || 0),
+                            type: "meal",
+                          });
+                        }}
+                      >
+                        <Text style={styles.foodItemPlusText}>+</Text>
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  );
+                })
             )}
           </View>
         )}
@@ -417,5 +510,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: hp("3%"),
   },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: hp("5%"),
+  },
+  loadingText: {
+    fontSize: RFValue(14),
+    color: "#6B7280",
+    marginTop: hp("2%"),
+  },
+  mealHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp("2%"),
+    marginBottom: hp("0.5%"),
+  },
 });
 
+  

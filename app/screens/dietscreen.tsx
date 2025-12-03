@@ -1,4 +1,5 @@
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
@@ -109,7 +110,20 @@ export default function DietScreen() {
                     <TouchableOpacity
                         style={[styles.primaryCta, !selectedDiet && { opacity: 0.6 }]}
                         disabled={!selectedDiet}
-                        onPress={() => router.push('/screens/stopinggoalscreen')}
+                        onPress={async () => {
+                            // Save diet type (optional)
+                            if (selectedDiet) {
+                                try {
+                                    await saveOnboardingData({
+                                        dietType: selectedDiet,
+                                    });
+                                    console.log("✅ Saved diet type:", selectedDiet);
+                                } catch (error) {
+                                    console.error("Error saving diet type:", error);
+                                }
+                            }
+                            router.push('/screens/stopinggoalscreen');
+                        }}
                     >
                         <Text style={styles.primaryCtaText}>Next</Text>
                     </TouchableOpacity>

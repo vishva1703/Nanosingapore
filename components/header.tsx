@@ -1,17 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { RFValue } from "react-native-responsive-fontsize";
-import { router } from "expo-router";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 interface Props {
   title?: string;
@@ -31,9 +29,12 @@ const DashboardHeaderWeek: React.FC<Props> = ({
   const DAYS_TO_RENDER = 21; // big enough for looping
   const MIDDLE = Math.floor(DAYS_TO_RENDER / 3);
 
-  // Base date = today or fixed — your choice
-
-  const [baseDate, setBaseDate] = React.useState(new Date(2024, 0, 1));
+  // Base date = today
+  const [baseDate, setBaseDate] = React.useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    return today;
+  });
   const [selectedDate, setSelectedDate] = React.useState(baseDate);
 
   const dates = React.useMemo(() => {

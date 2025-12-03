@@ -2,20 +2,20 @@ import { Ionicons, Octicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import {
-    heightPercentageToDP as hp,
-    widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -35,7 +35,6 @@ export default function SelectedFood() {
   const numberListRef = useRef<FlatList>(null);
   const fractionListRef = useRef<FlatList>(null);
   
-  // Scroll to selected item when modal opens
   useEffect(() => {
     if (showServingsModal) {
       setTimeout(() => {
@@ -60,12 +59,10 @@ export default function SelectedFood() {
     return Array.isArray(param) ? param[0] : (param || "");
   };
   
-  // Check if called from AddIngredients
   const fromAddIngredients = getParam(params.fromAddIngredients) === 'true';
   
   const measurement = getParam(params.servingSize) || "30g";
   
-  // Parse food data from params
   const food = {
     name: getParam(params.name),
     brand: getParam(params.brand),
@@ -141,15 +138,13 @@ export default function SelectedFood() {
   };
 
   return ( 
-  <SafeAreaView style={styles.container}>
-
+  <SafeAreaView style={styles.safeArea} edges={['top']}>
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
      
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -178,7 +173,6 @@ export default function SelectedFood() {
           </TouchableOpacity>
         </View>
 
-        {/* Menu Modal */}
         <Modal
           visible={showMenu}
           transparent={true}
@@ -221,6 +215,7 @@ export default function SelectedFood() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.foodNameContainer}>
             <View style={styles.foodNameRow}>
@@ -241,7 +236,6 @@ export default function SelectedFood() {
               </TouchableOpacity>
             </View>
 
-            {/* Number of Servings */}
             <View style={styles.servingsRow}>
               <Text style={styles.servingsLabel}>Number of servings</Text>
               <View style={styles.servingsValueRow}>
@@ -249,7 +243,6 @@ export default function SelectedFood() {
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => {
-                    // Initialize modal state from current servings
                     const currentServings = Math.floor(servings);
                     setSelectedNumber(currentServings || 1);
                     setShowServingsModal(true);
@@ -261,9 +254,7 @@ export default function SelectedFood() {
             </View>
           </View>
 
-          {/* Key Nutrition Facts Cards - Two Horizontal Rows */}
           <View style={styles.nutritionCardsContainer}>
-            {/* Row 1: Calories & Protein */}
             <View style={styles.nutritionRow}>
               <View style={styles.nutritionCard}>
                 {nutritionCards[0].editable && (
@@ -316,7 +307,6 @@ export default function SelectedFood() {
               </View>
             </View>
 
-            {/* Row 2: Carbs & Fat */}
             <View style={styles.nutritionRow}>
               <View style={styles.nutritionCard}>
                 <View style={styles.nutritionCardContent}>
@@ -354,7 +344,6 @@ export default function SelectedFood() {
             </View>
           </View>
 
-          {/* Other Nutrition Facts - Only show if not from AddIngredients */}
           {!fromAddIngredients && (
             <View style={styles.otherNutritionContainer}>
               <Text style={styles.otherNutritionTitle}>Other nutrition facts</Text>
@@ -372,27 +361,23 @@ export default function SelectedFood() {
           <View style={{ height: hp("5%") }} />
         </ScrollView>
 
-        {/* Log/Done Button - Fixed at Bottom */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.logButton}
             onPress={() => {
               if (fromAddIngredients) {
-                // Handle done action - navigate back to FoodDetail with ingredient data
                 const originalName = getParam(params.originalName) || '';
                 const imageUri = getParam(params.imageUri) || '';
                 
                 const queryParams = new URLSearchParams();
                 if (originalName) queryParams.append('name', originalName);
                 if (imageUri) queryParams.append('imageUri', imageUri);
-                // Pass ingredient name and quantity
                 queryParams.append('ingredientName', food.description || food.name || '');
                 queryParams.append('ingredientQuantity', servings.toString());
                 queryParams.append('ingredientCalories', food.calories || '0');
                 
                 router.push(`/screen1/scanfood/FoodDetail?${queryParams.toString()}`);
               } else {
-                // Handle log action
                 console.log("Log food:", food);
               }
             }}
@@ -403,7 +388,6 @@ export default function SelectedFood() {
           </TouchableOpacity>
         </View>
 
-        {/* Servings Edit Modal */}
         <Modal
           visible={showServingsModal}
           transparent={true}
@@ -412,7 +396,6 @@ export default function SelectedFood() {
         >
           <View style={styles.servingsModalContainer}>
             <View style={styles.servingsModalContent}>
-              {/* Input Type Buttons */}
               <View style={styles.inputTypeContainer}>
                 <TouchableOpacity
                   style={[
@@ -448,9 +431,7 @@ export default function SelectedFood() {
                 </TouchableOpacity>
               </View>
 
-              {/* Picker Container */}
               <View style={styles.pickerContainer}>
-                {/* Numbers Column */}
                 <FlatList
                   ref={numberListRef}
                   data={numbersList}
@@ -502,7 +483,6 @@ export default function SelectedFood() {
                   }}
                 />
 
-                {/* Fractions Column - Only show if fraction mode */}
                 {inputType === "fraction" && (
                   <FlatList
                     ref={fractionListRef}
@@ -558,7 +538,6 @@ export default function SelectedFood() {
                 )}
               </View>
 
-              {/* Done Button */}
               <TouchableOpacity
                 style={styles.modalDoneButton}
                 onPress={() => {
@@ -580,18 +559,23 @@ export default function SelectedFood() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F4F4FA",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F4F4FA", // lighter, matches screenshot
-    paddingHorizontal: 16,
-},
+    backgroundColor: "#F4F4FA",
+  },
 
 header: {
   flexDirection: "row",
   alignItems: "center",
-  marginBottom: 22,
-  marginTop: 6,
-  gap: 10,
+  justifyContent: "space-between",
+  paddingHorizontal: wp("4%"),
+  marginBottom: hp("2%"),
+  marginTop: hp("1%"),
+  gap: wp("2%"),
 },
 
 
@@ -668,9 +652,9 @@ header: {
   },
 
   scrollContent: {
-    paddingHorizontal: wp("5%"),
-    paddingTop: hp("3%"),
-    paddingBottom: hp("2%"),
+    paddingHorizontal: wp("4%"),
+    paddingTop: hp("1%"),
+    paddingBottom: hp("15%"), 
   },
 
   foodNameContainer: {
@@ -799,7 +783,6 @@ header: {
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "#E5E5EA",
-    left: wp("1%"),
   },
 
   nutritionCardContent: {
@@ -868,10 +851,13 @@ header: {
   },
 
   buttonContainer: {
-    paddingHorizontal: wp("6%"),
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: wp("4%"),
     paddingVertical: hp("2%"),
-    backgroundColor: "#FFFFFF",
-    
+    paddingBottom: hp("3%"),
   },
 
   logButton: {

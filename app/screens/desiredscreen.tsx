@@ -1,8 +1,9 @@
 import ProgressBar from '@/components/ProgressBar';
 import Ruler from "@/components/Ruler";
+import wellnessApi from "@/api/wellnessApi";   // <-- ADD THIS
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -23,9 +24,40 @@ const END_WEIGHT = 140;
 export default function DesiredWeightScreen() {
   const router = useRouter();
   const [selectedWeight, setSelectedWeight] = useState(48);
+  const [goalText, setGoalText] = useState("Lose Weight");
   const scrollX = useRef(new Animated.Value(0)).current;
   const { from } = useLocalSearchParams();
   const isFromSettings = from === "settings";
+
+  // 👉 Load weight goal from API
+  const loadGoalFromAPI = useCallback(async () => {
+    try {
+      const res = await wellnessApi.getWeightGoal();
+      console.log("📥 Fetched weight goal:", res);
+
+      if (res?.goalWeight?.kg) {
+        setSelectedWeight(res.goalWeight.kg);
+      }
+
+      if (res?.goalType) {
+        // lose / maintain / gain
+        if (res.goalType.includes("lose")) setGoalText("Lose Weight");
+        if (res.goalType.includes("maintain")) setGoalText("Maintain Weight");
+        if (res.goalType.includes("gain")) setGoalText("Gain Weight");
+      }
+    } catch (e) {
+      console.error("❌ Error fetching weight goal", e);
+    }
+  }, []);
+
+  // load API when screen focused
+  useFocusEffect(
+    useCallback(() => {
+      loadGoalFromAPI();
+    }, [loadGoalFromAPI])
+  );
+
+  // 🔢 Build ruler ticks
   const ticks = useMemo(() => {
     const arr = [];
     let index = 0;
@@ -48,31 +80,49 @@ export default function DesiredWeightScreen() {
     setSelectedWeight(Math.round(kgValue));
   });
 
+  // 👉 Save to API instead of AsyncStorage
+  const handleSaveGoal = async () => {
+    const goalWeightLbs = Math.round(selectedWeight * 2.20462);
+
+    const payload = {
+      goalWeight: {
+        kg: selectedWeight,
+        lbs: goalWeightLbs,
+      },
+    };
+
+    try {
+      const response = await wellnessApi.updateWeightGoal(payload);
+      console.log("🔥 Updated weight goal:", response);
+
+      if (isFromSettings) {
+        router.back();
+      } else {
+        router.push("/screens/fastgoalscreen");
+      }
+    } catch (error) {
+      console.error("❌ Failed to update weight goal:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
-        {/* 🔹 New Unified Header */}
+
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
-            {/* <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity> */}
-
             {!isFromSettings ? (
-                <ProgressBar screen="desired" noContainer={true} />
-              ) : (
-                <View style={styles.headerRow}>
+              <ProgressBar screen="desired" noContainer={true} />
+            ) : (
+              <View style={styles.headerRow}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                   <Ionicons name="chevron-back" size={24} color="#1F2937" />
                 </TouchableOpacity>
                 <Text style={{ fontSize: 20, fontWeight: "600", marginLeft: 12 }}>
                   Edit weight goal
                 </Text>
-                </View>
-              )}
+              </View>
+            )}
           </View>
         </View>
 
@@ -82,19 +132,19 @@ export default function DesiredWeightScreen() {
         >
           {!isFromSettings && (
             <View style={styles.section}>
-            <Text style={styles.sectionLabel}>
-              What is your desired weight?
-            </Text>
-            <Text style={styles.helperText}>
-              This will be used to calibrate your custom plan.
-            </Text>
-          </View>
+              <Text style={styles.sectionLabel}>
+                What is your desired weight?
+              </Text>
+              <Text style={styles.helperText}>
+                This will be used to calibrate your custom plan.
+              </Text>
+            </View>
           )}
 
           {/* Scale */}
           <View style={styles.scaleWrapper}>
             <View style={styles.weightInfo}>
-              <Text style={styles.subLabel}>Lose Weight</Text>
+              <Text style={styles.subLabel}>{goalText}</Text>
             </View>
 
             <Ruler />
@@ -103,13 +153,11 @@ export default function DesiredWeightScreen() {
 
         {/* Bottom CTA */}
         <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={styles.primaryCta}
-            onPress={() => router.push("/screens/fastgoalscreen")}
-          >
+          <TouchableOpacity style={styles.primaryCta} onPress={handleSaveGoal}>
             <Text style={styles.primaryCtaText}>Next</Text>
           </TouchableOpacity>
         </View>
+
       </View>
     </SafeAreaView>
   );
@@ -143,21 +191,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
   },
-  progressTrack: {
-    flex: 1,
-    height: 8,
-    borderRadius: 3,
-    backgroundColor: "#E5E7EB",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#4B3AAC",
-  },
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 0,
     paddingBottom: 120,
     gap: 28,
   },
@@ -167,34 +203,28 @@ const styles = StyleSheet.create({
   sectionLabel: {
     marginBottom: 8,
     fontSize: 26,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
   },
   helperText: {
     fontSize: 15,
     color: "#6B7280",
     marginTop: 4,
   },
-
-  scaleWrapper: { flex: 1, justifyContent: "center", marginBottom:20},
-  weightInfo: { alignItems: "center", marginBottom: 90 },
-  subLabel: { fontSize: 20, color: "#111", marginBottom: 8 },
-  centerWeight: { fontSize: 36, fontWeight: "700", color: "#111827" },
-
-  tickContainer: {
+  scaleWrapper: {
+    flex: 1,
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  weightInfo: {
     alignItems: "center",
-    justifyContent: "flex-end",
-    height: 150,
-    width: ITEM_WIDTH,
+    marginBottom: 90,
   },
-  tick: { borderRadius: 1 },
-  tickLabel: {
-    position: "absolute",
-    bottom: -22,
-    fontSize: 12,
-    textAlign: "center",
+  subLabel: {
+    fontSize: 20,
+    color: "#111",
+    marginBottom: 8,
   },
-
   bottomContainer: {
     position: "absolute",
     bottom: 32,
@@ -207,5 +237,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
   },
-  primaryCtaText: { color: "#FFF", fontSize: 16, fontWeight: "600" },
+  primaryCtaText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });

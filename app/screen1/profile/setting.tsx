@@ -1,12 +1,222 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Modal } from "react-native";
+import wellnessApi from "@/api/wellnessApi";
 import { Ionicons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+
+interface PersonalDetails {
+  age?: number;
+  dateOfBirth?: string;
+  height?: {
+    cm?: number;
+    feet?: number;
+    inches?: number;
+  };
+  weight?: {
+    kg?: number;
+    lbs?: number;
+  };
+  currentWeight?: {
+    kg?: number;
+    lbs?: number;
+  };
+  name?: string;
+}
+
+// Helper function to calculate age from date of birth
+const calculateAge = (dateOfBirth: string | undefined): number | null => {
+  if (!dateOfBirth) return null;
+  try {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Helper function to format height
+const formatHeight = (height: PersonalDetails['height']): string => {
+  if (!height) return "N/A";
+  
+  if (height.feet && height.inches !== undefined) {
+    return `${height.feet} ft ${height.inches} in`;
+  } else if (height.cm) {
+    // Convert cm to ft/in
+    const totalInches = height.cm / 2.54;
+    const feet = Math.floor(totalInches / 12);
+    const inches = Math.round(totalInches % 12);
+    return `${feet} ft ${inches} in`;
+  }
+  
+  return "N/A";
+};
+
+// Helper function to format weight
+const formatWeight = (weight: PersonalDetails['weight'] | PersonalDetails['currentWeight']): string => {
+  if (!weight) return "N/A";
+  
+  if (weight.kg !== undefined) {
+    return `${weight.kg} kg`;
+  } else if (weight.lbs !== undefined) {
+    return `${weight.lbs} lbs`;
+  }
+  
+  return "N/A";
+};
+
+interface SettingsData {
+  burnedCaloriesFlag?: boolean;
+  [key: string]: any;
+}
+
+interface GoalsData {
+  goalWeight?: {
+    kg?: number;
+    lbs?: number;
+  };
+  [key: string]: any;
+}
 
 export default function SettingsScreen() {
   const [burnedCalories, setBurnedCalories] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
+  const [settings, setSettings] = useState<SettingsData | null>(null);
+  const [goals, setGoals] = useState<GoalsData | null>(null);
+  
+  // Save token on mount if needed
+  useEffect(() => {
+    // Save the provided token - you can remove this if token is already saved from login
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbElkIjoiQWthc2ggR2FqZXJhIiwidXNlcklkIjoiNjgyNWI2NmE1ZWFhNzQ2YmRmOTAwN2ZjIiwiaWF0IjoxNzY0MTM4MTM5fQ.FnYCXdy76eaF-twisjH1rxTnKN7ReNuz7Br490iyRig";
+    wellnessApi.saveToken(token);
+  }, []);
+
+  // Fetch all settings data
+  const fetchAllSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all settings data in parallel
+      const [personalDetailsResponse, settingsResponse, goalsResponse] = await Promise.all([
+        wellnessApi.getPersonalDetails(),
+        wellnessApi.getSettings(),
+        wellnessApi.getGoals()
+      ]);
+      
+      // Handle different response formats
+      const details = personalDetailsResponse?.data || personalDetailsResponse?.result || personalDetailsResponse;
+      const settingsData = settingsResponse?.data || settingsResponse?.result || settingsResponse;
+      const goalsData = goalsResponse?.data || goalsResponse?.result || goalsResponse;
+      
+      if (details) {
+        setPersonalDetails(details);
+      }
+      
+      if (settingsData) {
+        setSettings(settingsData);
+        // Set burned calories flag from settings
+        if (settingsData.burnedCaloriesFlag !== undefined) {
+          setBurnedCalories(settingsData.burnedCaloriesFlag);
+        }
+      }
+      
+      if (goalsData) {
+        setGoals(goalsData);
+      }
+    } catch (error: any) {
+      console.error("Error fetching settings:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to load settings. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllSettings();
+    }, [fetchAllSettings])
+  );
+
+  // Handle burned calories toggle
+  const handleBurnedCaloriesToggle = useCallback(async (value: boolean) => {
+    try {
+      // Optimistically update UI
+      setBurnedCalories(value);
+      
+      // Call API to toggle
+      await wellnessApi.toggleBurnedCaloriesFlag();
+      
+      // Refresh settings to get updated state
+      const settingsResponse = await wellnessApi.getSettings();
+      const settingsData = settingsResponse?.data || settingsResponse?.result || settingsResponse;
+      
+      if (settingsData?.burnedCaloriesFlag !== undefined) {
+        setBurnedCalories(settingsData.burnedCaloriesFlag);
+      }
+    } catch (error: any) {
+      // Revert on error
+      setBurnedCalories(!value);
+      console.error("Error toggling burned calories flag:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to update burned calories setting. Please try again."
+      );
+    }
+  }, []);
+
+  // Handle delete account
+  const handleDeleteAccount = useCallback(async () => {
+    try {
+      setDeleting(true);
+      
+      await wellnessApi.deleteAccount();
+      
+      // Clear token and navigate to login
+      await wellnessApi.logout();
+      
+      Alert.alert(
+        "Account Deleted",
+        "Your account has been successfully deleted.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace("/screens/loginscreen");
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to delete account. Please try again."
+      );
+    } finally {
+      setDeleting(false);
+      setDeleteModalVisible(false);
+    }
+  }, []);
+
+  // Calculate age from date of birth
+  const age = personalDetails?.age || calculateAge(personalDetails?.dateOfBirth) || null;
+  
+  // Format height and weight
+  const heightText = formatHeight(personalDetails?.height);
+  const weightText = formatWeight(personalDetails?.currentWeight || personalDetails?.weight);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -22,20 +232,29 @@ export default function SettingsScreen() {
 
         {/* Profile Values */}
         <View style={styles.card}>
-          <View style={styles.row} >
-            <Text style={styles.label} >Age</Text>
-            <Text style={styles.value}>18</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Height</Text>
-            <Text style={styles.value}>5 ft 5 in</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Current weight</Text>
-            <Text style={styles.value}>85 kg</Text>
-          </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#4B3AAC" />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.label}>Age</Text>
+                <Text style={styles.value}>{age !== null ? `${age}` : "N/A"}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text style={styles.label}>Height</Text>
+                <Text style={styles.value}>{heightText}</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text style={styles.label}>Current weight</Text>
+                <Text style={styles.value}>{weightText}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Customization */}
@@ -68,7 +287,8 @@ export default function SettingsScreen() {
             </View>
             <Switch
               value={burnedCalories}
-              onValueChange={setBurnedCalories}
+              onValueChange={handleBurnedCaloriesToggle}
+              disabled={loading}
             />
           </View>
         </View>
@@ -127,13 +347,15 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.deleteBtn}
-          onPress={() => {
-            // Handle delete account here
-            setDeleteModalVisible(false);
-          }}
+          style={[styles.deleteBtn, deleting && styles.deleteBtnDisabled]}
+          onPress={handleDeleteAccount}
+          disabled={deleting}
         >
-          <Text style={styles.deleteBtnText}>Delete</Text>
+          {deleting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.deleteBtnText}>Delete</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -270,6 +492,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#666",
+  },
+  
+  deleteBtnDisabled: {
+    opacity: 0.6,
   },
   
 });

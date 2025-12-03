@@ -1,30 +1,33 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import wellnessApi from "@/api/wellnessApi";
+import { useActivity } from "@/components/ActivityContext";
+import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TextStyle,
   TouchableOpacity,
-  View,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useActivity } from "@/components/ActivityContext";
-import { useLocalSearchParams } from "expo-router";
 
 const RunScreen = () => {
   const { type } = useLocalSearchParams();
   const router = useRouter();
   const [intensity, setIntensity] = useState(2); 
   const [duration, setDuration] = useState(15);
+  const [loading, setLoading] = useState(false);
   const { addActivity, setIsAnalyzing } = useActivity();
 
   // Get activity type from params or default to "Run"
@@ -77,9 +80,23 @@ const RunScreen = () => {
   const activityConfig = getActivityConfig(activityType);
   const durationOptions = [15, 30, 60, 90];
 
+  // Map intensity number to API string format
+  const getIntensityString = (intensityValue: number): string => {
+    switch (intensityValue) {
+      case 0:
+        return "low";
+      case 1:
+        return "medium";
+      case 2:
+        return "high";
+      default:
+        return "medium";
+    }
+  };
+
   // Calculate calories based on activity type and intensity
   const calculateCalories = () => {
-    const baseCalories = activityType === "Weight Lifting" ? 4 : 8; // Weight lifting burns fewer calories per minute
+    const baseCalories = activityType === "WeightLifting" ? 4 : 8; // Weight lifting burns fewer calories per minute
     const intensityMultiplier = intensity === 2 ? 1.5 : intensity === 1 ? 1.2 : 1;
     return Math.round(baseCalories * duration * intensityMultiplier);
   };
@@ -181,23 +198,230 @@ const RunScreen = () => {
           value={String(duration)}
           onChangeText={(t) => setDuration(Number(t))}
         />
-
-    
       </ScrollView>
 
       <TouchableOpacity 
-        style={styles.addBtn}
-        onPress={() => {
-          addActivity({
-            type: activityConfig.title,
-            intensity,
-            duration,
-            calories: calculateCalories(),
-          });
-          router.push('/');
+        style={[styles.addBtn, loading && styles.addBtnDisabled]}
+        onPress={async () => {
+          if (loading) return;
+          
+          try {
+            setLoading(true);
+            setIsAnalyzing(true);
+            
+            // Get current date and time
+            const now = new Date();
+            const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            // Map intensity to API format
+            const intensityString = getIntensityString(intensity);
+            
+            console.log("🏃 Logging exercise to backend:", {
+              type: activityType,
+              intensity: intensityString,
+              duration,
+              date: currentDate
+            });
+            
+            // Call appropriate API endpoint based on activity type
+            let apiResponse;
+            const requestPayload = {
+              intensity: intensityString,
+              duration,
+              date: currentDate
+            };
+            
+            console.log("📤 [RunScreen] Sending request payload:", JSON.stringify(requestPayload, null, 2));
+            
+            if (activityType === "WeightLifting") {
+              apiResponse = await (wellnessApi.logWeightLifting as any)(requestPayload);
+            } else {
+              // Default to Run
+              apiResponse = await (wellnessApi.logRun as any)(requestPayload);
+            }
+            
+            console.log("📥 [RunScreen] Full API Response:", JSON.stringify(apiResponse, null, 2));
+            console.log("📥 [RunScreen] Response type:", typeof apiResponse);
+            console.log("📥 [RunScreen] Response keys:", apiResponse ? Object.keys(apiResponse) : 'null');
+            
+            // Verify response indicates success
+            // Success indicators: flag === true, success === true, or presence of data/logId
+            const hasSuccessFlag = apiResponse?.flag === true;
+            const hasSuccessProperty = apiResponse?.success === true;
+            const hasData = !!apiResponse?.data;
+            const hasLogId = !!(apiResponse?.logId || apiResponse?.id || apiResponse?.data?.logId || apiResponse?.data?.id);
+            
+            // Failure indicators: flag === false, success === false, or explicit error
+            const hasFailureFlag = apiResponse?.flag === false;
+            const hasFailureProperty = apiResponse?.success === false;
+            const hasError = !!(apiResponse?.error || (apiResponse?.message && apiResponse?.message.toLowerCase().includes('error')));
+            
+            // Check if message indicates success (common success messages)
+            const successMessages = ['logged', 'saved', 'created', 'success', 'added'];
+            const message = apiResponse?.message?.toLowerCase() || '';
+            const hasSuccessMessage = successMessages.some(successMsg => message.includes(successMsg));
+            
+            const isSuccess = (hasSuccessFlag || hasSuccessProperty || hasData || hasLogId || hasSuccessMessage) && 
+                            !hasFailureFlag && 
+                            !hasFailureProperty && 
+                            !hasError;
+            
+            console.log("🔍 [RunScreen] Success check:", {
+              hasSuccessFlag,
+              hasSuccessProperty,
+              hasData,
+              hasLogId,
+              hasSuccessMessage,
+              hasFailureFlag,
+              hasFailureProperty,
+              hasError,
+              isSuccess,
+              message: apiResponse?.message
+            });
+            
+            if (!isSuccess) {
+              console.warn("⚠️ [RunScreen] API response indicates failure:", apiResponse);
+              const errorMsg = apiResponse?.error || 
+                             (apiResponse?.message && !hasSuccessFlag && !hasSuccessMessage ? apiResponse.message : null) ||
+                             "Unknown error";
+              throw new Error(errorMsg);
+            }
+            
+            console.log("✅ [RunScreen] Exercise successfully logged to database!");
+            console.log("✅ [RunScreen] Success message:", apiResponse?.message || "Exercise logged successfully");
+            
+            // Extract logId from API response (try multiple possible locations)
+            const logId = apiResponse?.data?.logId || 
+                         apiResponse?.data?.id || 
+                         apiResponse?.data?.exerciseLogId ||
+                         apiResponse?.logId || 
+                         apiResponse?.id ||
+                         apiResponse?.data?.data?.logId;
+            
+            console.log("🆔 [RunScreen] Extracted logId:", logId);
+            
+            // Log verification details
+            if (logId) {
+              console.log("✅ [RunScreen] ✅ VERIFICATION: Data saved to database with logId:", logId);
+              console.log("✅ [RunScreen] You can verify this by:");
+              console.log("   1. Checking the 'Recently Logged' section on the dashboard");
+              console.log("   2. The activity should appear in the recent logs API");
+              console.log("   3. The logId can be used to update/delete this entry later");
+              
+              // Optional: Verify by fetching recent logs (for debugging)
+              try {
+                console.log("🔍 [RunScreen] Verifying by fetching recent logs...");
+                const recentLogsResponse = await wellnessApi.getRecentLogs({
+                  page: 1,
+                  limit: 10,
+                  date: currentDate
+                });
+                console.log("📋 [RunScreen] Recent logs response:", JSON.stringify(recentLogsResponse, null, 2));
+                
+                const recentLogs = recentLogsResponse?.data?.list || 
+                                 recentLogsResponse?.data || 
+                                 recentLogsResponse?.list ||
+                                 recentLogsResponse || [];
+                
+                // Check if our logged exercise appears in recent logs
+                const foundLog = Array.isArray(recentLogs) 
+                  ? recentLogs.find((log: any) => 
+                      (log.logId === logId || log.id === logId) ||
+                      (log.type === activityConfig.title.toLowerCase() && 
+                       log.duration === duration)
+                    )
+                  : null;
+                
+                if (foundLog) {
+                  console.log("✅ [RunScreen] ✅ VERIFICATION SUCCESS: Exercise found in recent logs!");
+                  console.log("✅ [RunScreen] Found log:", JSON.stringify(foundLog, null, 2));
+                } else {
+                  console.log("ℹ️ [RunScreen] Exercise may not appear in recent logs yet (could be a timing issue)");
+                  console.log("ℹ️ [RunScreen] Recent logs count:", Array.isArray(recentLogs) ? recentLogs.length : 0);
+                }
+              } catch (verifyError) {
+                console.warn("⚠️ [RunScreen] Could not verify via recent logs (non-critical):", verifyError);
+              }
+            } else {
+              console.warn("⚠️ [RunScreen] No logId found in response, but request may have succeeded");
+              console.warn("⚠️ [RunScreen] Response structure:", JSON.stringify(apiResponse, null, 2));
+            }
+            
+            // Create activity object with API response data
+            const activityData = {
+              id: logId || `activity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              type: activityConfig.title,
+              intensity,
+              duration,
+              calories: calculateCalories(),
+              time: currentTime,
+              date: currentDate,
+              logId: logId, // Store API logId for future updates/deletes
+            };
+            
+            console.log("🏃 [RunScreen] Adding activity to context:", activityData);
+            
+            // Add to context (for immediate display on index page)
+            addActivity(activityData);
+            
+            // Show success message with verification details
+            const successMessage = logId 
+              ? `Exercise logged successfully!\n\nLog ID: ${logId}\n\nYou can verify this in the "Recently Logged" section.`
+              : `Exercise logged successfully!\n\nCheck the "Recently Logged" section to verify.`;
+            
+            Alert.alert(
+              "Success! ✅",
+              successMessage,
+              [
+                {
+                  text: "OK",
+                  onPress: async () => {
+                    // Small delay to ensure backend has processed the request
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // Navigate to dashboard (index page) - activity will appear in "Recently Logged" section
+                    // The useFocusEffect in index.tsx will automatically refresh the data
+                    router.push('/(tabs)/');
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          } catch (error: any) {
+            console.error("❌ [RunScreen] Error logging exercise:", error);
+            console.error("❌ [RunScreen] Error type:", typeof error);
+            console.error("❌ [RunScreen] Error message:", error?.message);
+            console.error("❌ [RunScreen] Error response:", error?.response);
+            console.error("❌ [RunScreen] Error response data:", error?.response?.data);
+            console.error("❌ [RunScreen] Error response status:", error?.response?.status);
+            console.error("❌ [RunScreen] Full error object:", JSON.stringify(error, null, 2));
+            
+            const errorMessage = error?.response?.data?.message || 
+                               error?.response?.data?.error ||
+                               error?.message || 
+                               "Failed to log exercise. Please try again.";
+            
+            const errorDetails = error?.response?.status 
+              ? `Status: ${error?.response?.status}\n\n${errorMessage}`
+              : errorMessage;
+            
+            Alert.alert(
+              "Error ❌",
+              errorDetails,
+              [{ text: "OK" }]
+            );
+          } finally {
+            setLoading(false);
+            setIsAnalyzing(false);
+          }
         }}
+        disabled={loading}
       >
-        <Text style={styles.addBtnText}>+ Add</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFF" />
+        ) : (
+          <Text style={styles.addBtnText}>+ Add</Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
     </KeyboardAvoidingView>
@@ -336,5 +560,8 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: RFValue(14),
     fontWeight: "600",
+  },
+  addBtnDisabled: {
+    opacity: 0.6,
   },
 });

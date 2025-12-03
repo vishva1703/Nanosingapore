@@ -9,13 +9,49 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Google from "expo-auth-session/providers/google";
+import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+    import api from "../../services/api";
+import { signInWithGoogleAPI } from "../../services/auth"; 
 
 const { width } = Dimensions.get("window");
 
 export default function CreateAccountScreen() {
   const router = useRouter();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "570610933402-tbr7h8pn4asn80vsvaeucbup7d8i4fv7.apps.googleusercontent.com",
+    iosClientId: "570610933402-parjfemd0r2litm640bbhq25amsea71d.apps.googleusercontent.com",
+    webClientId: "570610933402-abm3tun02jsum8tvhgfgkjtnkod3on0c.apps.googleusercontent.com"
+  });
+    
+
+  const handleLogin = async (googleToken) => {
+    try {
+      const res = await signInWithGoogleAPI(googleToken);
+      const token = res.data.token;
+  
+      await AsyncStorage.setItem("auth_token", token);
+      global.authToken = token;
+  
+      router.push("/(tabs)");
+    } catch (e) {
+      Alert.alert("Google Sign-in Failed", "Please try again");
+      console.log(e);
+    }
+  };
+  
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const idToken = response.authentication.idToken;
+      handleLogin(idToken);
+    }
+  }, [response]);
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
@@ -46,16 +82,17 @@ export default function CreateAccountScreen() {
             <Text style={styles.outlinedButtonText}>Sign in with Apple</Text>
           </TouchableOpacity>
 
+
           {/* Google Sign-in */}
           <TouchableOpacity
-            style={styles.outlinedButton}
-            activeOpacity={0.85}
-            onPress={() => router.push('/(tabs)')}
-          >
-          <Image source={require("../../assets/images/google-logo.png")} style={{ width: 18, height: 18 }} />
+  style={styles.outlinedButton}
+  activeOpacity={0.85}
+  onPress={() => promptAsync()}
+>
+  <Image source={require("../../assets/images/google-logo.png")} style={{ width: 18, height: 18 }} />
+  <Text style={styles.outlinedButtonText}>Sign in with Google</Text>
+</TouchableOpacity>
 
-            <Text style={styles.outlinedButtonText}>Sign in with Google</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

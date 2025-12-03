@@ -1,26 +1,116 @@
+import wellnessApi from "@/api/wellnessApi";
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
 
 export default function WeightInScreen() {
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
   const [weight, setWeight] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Convert kg to lbs (1 kg = 2.20462 lbs)
+  const convertKgToLbs = (kg: number): number => {
+    return Math.round(kg * 2.20462 * 10) / 10; // Round to 1 decimal place
+  };
+
+  // Format date to ISO format (YYYY-MM-DD)
+  const formatDateToISO = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Format time to ISO format (HH:MM:SS)
+  const formatTimeToISO = (time: Date): string => {
+    const hours = String(time.getHours()).padStart(2, '0');
+    const minutes = String(time.getMinutes()).padStart(2, '0');
+    const seconds = String(time.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  // Handle save weight
+  const handleSaveWeight = async () => {
+    // Validate weight input
+    if (!weight || weight.trim() === '') {
+      Alert.alert('Validation Error', 'Please enter your weight.');
+      return;
+    }
+
+    const weightValue = parseFloat(weight);
+    if (isNaN(weightValue) || weightValue <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid weight value.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Format date and time
+      const dateISO = formatDateToISO(date);
+      const timeISO = formatTimeToISO(time);
+
+      // Convert weight to both kg and lbs
+      const weightKg = weightValue;
+      const weightLbs = convertKgToLbs(weightKg);
+
+      console.log('[saveweight] Logging weight:', {
+        date: dateISO,
+        time: timeISO,
+        weight: { kg: weightKg, lbs: weightLbs }
+      });
+
+      // Call API
+      const response = await wellnessApi.logWeight({
+        date: dateISO,
+        time: timeISO,
+        weight: {
+          kg: weightKg,
+          lbs: weightLbs,
+        },
+      });
+
+      console.log('[saveweight] Weight logged successfully:', response);
+
+      // Show success message and navigate back
+      Alert.alert(
+        'Success',
+        'Weight logged successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('[saveweight] Error logging weight:', error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error?.message || 'Failed to log weight. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -94,8 +184,16 @@ export default function WeightInScreen() {
 
         {/* FIXED BOTTOM BUTTON */}
         <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => router.push("/screen1/profile/logactivity")}>
-            <Text style={styles.buttonText}>Save weight</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSaveWeight}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Save weight</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -190,6 +288,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginTop: 40,
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: "#fff",

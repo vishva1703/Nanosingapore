@@ -1,8 +1,11 @@
+import wellnessApi from "@/api/wellnessApi";
 import { useFood } from "@/components/FoodContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -69,6 +72,7 @@ export default function NuticiationFood() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const { addFood } = useFood();
+    const [loading, setLoading] = useState(false);
     const [calories , setCalories] = useState("");
     const [protein, setProtein] = useState("");
     const [carbs, setCarbs] = useState("");
@@ -106,7 +110,7 @@ export default function NuticiationFood() {
     calcium.trim() &&
     iron.trim();
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const getParam = (param: string | string[] | undefined): string => {
           return Array.isArray(param) ? param[0] : (param || "");
         };
@@ -117,35 +121,114 @@ export default function NuticiationFood() {
         const servingsPerContainer = getParam(params.servingsPerContainer);
         
         const foodName = description ? `${description}${brand ? ` - ${brand}` : ''}` : (brand || "Food");
-        addFood({
-          id: Date.now().toString(),
-          name: foodName,
-          brand,
-          description,
-          servingSize,
-          servingsPerContainer,
-          calories,
-          protein,
-          carbs,
-          fat,
-          saturatedFat,
-          polyunsaturatedFat,
-          monounsaturatedFat,
-          trans,
-          cholesterol,
-          sodium,
-          sugar,
-          potassium,
-          fiber,
-          vitaminA,
-          vitaminC,
-          calcium,
-          iron,
-          cookedType: "cooked",
-        });
-      
-        router.push("/screen1/fooddatabase/save");
-      };
+        
+        try {
+            setLoading(true);
+            
+            // Prepare food payload for API
+            // Structure: flat object with all nutritional values as numbers
+            const foodPayload: any = {
+                brand: brand || undefined,
+                description: description || foodName,
+                servingSize: servingSize || undefined,
+                servingsPerContainer: servingsPerContainer ? parseInt(servingsPerContainer) : undefined,
+                calories: calories ? parseFloat(calories) : 0,
+                protein: protein ? parseFloat(protein) : 0,
+                carbs: carbs ? parseFloat(carbs) : 0,
+                fat: fat ? parseFloat(fat) : 0,
+                saturatedFat: saturatedFat ? parseFloat(saturatedFat) : 0,
+                polyunsaturatedFat: polyunsaturatedFat ? parseFloat(polyunsaturatedFat) : 0,
+                monounsaturatedFat: monounsaturatedFat ? parseFloat(monounsaturatedFat) : 0,
+                trans: trans ? parseFloat(trans) : 0,
+                cholesterol: cholesterol ? parseFloat(cholesterol) : 0,
+                sodium: sodium ? parseFloat(sodium) : 0,
+                sugar: sugar ? parseFloat(sugar) : 0,
+                potassium: potassium ? parseFloat(potassium) : 0,
+                fiber: fiber ? parseFloat(fiber) : 0,
+                vitaminA: vitaminA ? parseFloat(vitaminA) : 0,
+                vitaminC: vitaminC ? parseFloat(vitaminC) : 0,
+                calcium: calcium ? parseFloat(calcium) : 0,
+                iron: iron ? parseFloat(iron) : 0,
+            };
+            
+            // Remove undefined values to clean up payload
+            Object.keys(foodPayload).forEach(key => {
+                if (foodPayload[key] === undefined) {
+                    delete foodPayload[key];
+                }
+            });
+            
+            console.log("📝 Saving food to backend:", JSON.stringify(foodPayload, null, 2));
+            console.log("📝 API Endpoint: /nutrition-api/my-food/add-update-food");
+            
+            // Call API to add/update food
+            const apiResponse = await wellnessApi.addOrUpdateFood(foodPayload);
+            
+            console.log("✅ Food saved to backend:", JSON.stringify(apiResponse, null, 2));
+            
+            // Extract food ID from API response (handle different response structures)
+            const foodId = apiResponse?.data?.id || 
+                          apiResponse?.data?.foodId || 
+                          apiResponse?.data?.data?.id ||
+                          apiResponse?.data?.data?.foodId ||
+                          apiResponse?.result?.id ||
+                          apiResponse?.result?.foodId ||
+                          apiResponse?.id || 
+                          apiResponse?.foodId ||
+                          Date.now().toString();
+            
+            console.log("✅ Extracted food ID:", foodId);
+            
+            // Add to context with API response data (id stores the API foodId)
+            addFood({
+                id: foodId,
+                name: foodName,
+                brand,
+                description,
+                servingSize,
+                servingsPerContainer,
+                calories,
+                protein,
+                carbs,
+                fat,
+                saturatedFat,
+                polyunsaturatedFat,
+                monounsaturatedFat,
+                trans,
+                cholesterol,
+                sodium,
+                sugar,
+                potassium,
+                fiber,
+                vitaminA,
+                vitaminC,
+                calcium,
+                iron,
+                cookedType: "cooked",
+            });
+            
+            router.push("/screen1/fooddatabase/save");
+        } catch (error: any) {
+            console.error("❌ Error saving food:", error);
+            console.error("❌ Error response:", error?.response?.data);
+            console.error("❌ Error status:", error?.response?.status);
+            
+            // Extract error message from different possible response structures
+            const errorMessage = error?.response?.data?.message || 
+                               error?.response?.data?.error ||
+                               error?.response?.data?.data?.message ||
+                               error?.message || 
+                               "Failed to save food. Please try again.";
+            
+            Alert.alert(
+                "Error",
+                errorMessage,
+                [{ text: "OK" }]
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <KeyboardAvoidingView
@@ -281,11 +364,19 @@ export default function NuticiationFood() {
                 {/* Next Button - Fixed at Bottom */}
                 <View style={styles.buttonContainer}>
                 <TouchableOpacity
-  disabled={!isFormValid}
-  style={[styles.nextButton, isFormValid && { backgroundColor: "#4B1F8C" }]}
+  disabled={!isFormValid || loading}
+  style={[
+    styles.nextButton, 
+    isFormValid && !loading && { backgroundColor: "#4B1F8C" },
+    loading && { opacity: 0.7 }
+  ]}
   onPress={handleSave}
 >
-  <Text style={styles.nextButtonText}>Save Food</Text>
+  {loading ? (
+    <ActivityIndicator size="small" color="#FFF" />
+  ) : (
+    <Text style={styles.nextButtonText}>Save Food</Text>
+  )}
 </TouchableOpacity>
 
 

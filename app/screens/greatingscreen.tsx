@@ -1,8 +1,12 @@
+import wellnessApi from '@/api/wellnessApi';
 import ProgressBar from '@/components/ProgressBar';
+import { getOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   StyleSheet,
   Text,
@@ -15,6 +19,149 @@ const { width } = Dimensions.get("window");
 
 export default function GreatingsScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const collectOnboardingData = async () => {
+    try {
+      // Get all stored onboarding data
+      const storedData = await getOnboardingData();
+      
+      // Log the raw stored data
+      console.log("=== ONBOARDING DATA COLLECTION ===");
+      console.log("Raw stored data from AsyncStorage:", JSON.stringify(storedData, null, 2));
+      
+      if (!storedData) {
+        console.error("ERROR: No onboarding data found in storage");
+        Alert.alert("Error", "Onboarding data not found. Please complete the onboarding process.");
+        return null;
+      }
+
+      // Build the payload for auto-generate-macro API
+      const payload: any = {
+        gender: storedData.gender || "male",
+        activityLevel: storedData.activityLevel || "sedentary",
+        unitSystem: storedData.unitSystem || "Imperial",
+        height: storedData.height || { cm: 170, feet: 5, inches: 7 },
+        weight: storedData.weight || { kg: 70, lbs: 154 },
+        dateOfBirth: storedData.dateOfBirth || new Date().toISOString(),
+        goal: storedData.goal || "Lose weight",
+        goalWeight: storedData.goalWeight || { kg: 65, lbs: 143 },
+        changeInWeightPerWeek: storedData.changeInWeightPerWeek || { kg: 0.5, lbs: 1.1 },
+      };
+
+      // Add optional fields if they exist
+      if (storedData.goalObstacles) {
+        payload.goalObstacles = storedData.goalObstacles;
+      }
+      if (storedData.wantToAccomplish) {
+        payload.wantToAccomplish = storedData.wantToAccomplish;
+      }
+      if (storedData.dietType) {
+        payload.dietType = storedData.dietType;
+      }
+
+      // Log the complete payload before sending
+      console.log("=== API PAYLOAD ===");
+      console.log("Complete payload to be sent:", JSON.stringify(payload, null, 2));
+      console.log("Payload keys:", Object.keys(payload));
+      console.log("Payload values:", Object.values(payload));
+
+      return payload;
+    } catch (error: any) {
+      console.error("=== ERROR COLLECTING ONBOARDING DATA ===");
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      console.error("Full error object:", JSON.stringify(error, null, 2));
+      Alert.alert("Error", "Failed to collect onboarding data. Please try again.");
+      return null;
+    }
+  };
+
+  const handleGenerateMacro = async () => {
+    try {
+      setLoading(true);
+
+      console.log("=== STARTING MACRO GENERATION ===");
+      console.log("Timestamp:", new Date().toISOString());
+
+      // Collect all onboarding data
+      const payload = await collectOnboardingData();
+      if (!payload) {
+        console.error("ERROR: Failed to collect payload, aborting API call");
+        setLoading(false);
+        return;
+      }
+
+      console.log("=== CALLING AUTO-GENERATE-MACRO API ===");
+      console.log("API endpoint: /nutrition-api/auth/auto-generate-macro");
+      console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+      // Call auto-generate-macro API
+      const response = await wellnessApi.autoGenerateMacro(payload);
+      
+      console.log("=== API RESPONSE RECEIVED ===");
+      console.log("Full response:", JSON.stringify(response, null, 2));
+      console.log("Response keys:", Object.keys(response || {}));
+      console.log("Response.data:", response?.data);
+      console.log("Response.result:", response?.result);
+      
+      // Handle response
+      const macroData = response?.data || response?.result || response;
+
+      console.log("=== PROCESSED MACRO DATA ===");
+      console.log("Macro data to be displayed:", JSON.stringify(macroData, null, 2));
+
+      // Navigate to planscreen with generated macro data
+      console.log("=== NAVIGATING TO PLAN SCREEN ===");
+      router.push({
+        pathname: "/screens/planscreen",
+        params: {
+          macroData: JSON.stringify(macroData),
+        },
+      });
+      
+      console.log("=== MACRO GENERATION SUCCESS ===");
+    } catch (error: any) {
+      console.error("=== ERROR GENERATING MACRO ===");
+      console.error("Error timestamp:", new Date().toISOString());
+      console.error("Error type:", typeof error);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      
+      // Log error response details if available
+      if (error?.response) {
+        console.error("=== ERROR RESPONSE DETAILS ===");
+        console.error("Status:", error.response.status);
+        console.error("Status text:", error.response.statusText);
+        console.error("Headers:", JSON.stringify(error.response.headers, null, 2));
+        console.error("Response data:", JSON.stringify(error.response.data, null, 2));
+        console.error("Response config:", JSON.stringify(error.response.config, null, 2));
+      }
+      
+      // Log request details if available
+      if (error?.request) {
+        console.error("=== ERROR REQUEST DETAILS ===");
+        console.error("Request:", JSON.stringify(error.request, null, 2));
+      }
+      
+      // Log full error object
+      console.error("=== FULL ERROR OBJECT ===");
+      console.error(JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      
+      const errorMessage = 
+        error?.response?.data?.message || 
+        error?.message || 
+        "Failed to generate macros. Please try again.";
+      
+      console.error("=== USER-FACING ERROR MESSAGE ===");
+      console.error("Message:", errorMessage);
+      
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setLoading(false);
+      console.log("=== MACRO GENERATION PROCESS COMPLETED ===");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -54,11 +201,16 @@ export default function GreatingsScreen() {
         {/* 🔹 Bottom Button */}
         <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={styles.primaryCta}
+            style={[styles.primaryCta, loading && { opacity: 0.6 }]}
             activeOpacity={0.85}
-            onPress={() => router.push("/screens/planscreen")}
+            onPress={handleGenerateMacro}
+            disabled={loading}
           >
-            <Text style={styles.primaryCtaText}>Next</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.primaryCtaText}>Next</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

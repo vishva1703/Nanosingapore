@@ -1,19 +1,23 @@
-import React from "react";
+import { ProfileAPI } from "@/api/profile";
+import wellnessApi from "@/api/wellnessApi";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   Image,
   Modal,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp
 } from "react-native-responsive-screen";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 
 interface WaterContentProps {
@@ -30,6 +34,10 @@ interface WaterContentProps {
     value: number;
     icon: any;
   }>;
+  date?: string; // Date in YYYY-MM-DD format
+  onRefresh?: () => void; // Callback to refresh dashboard data
+  currentWaterIntake?: number; // Current water intake in ml from dashboard
+  steps?: number; // Current steps count from dashboard
 }
 
 interface CircleProgressProps {
@@ -145,13 +153,264 @@ const WaterContent: React.FC<WaterContentProps> = ({
   selectedAmount,
   setSelectedAmount,
   nutrients,
+  date,
+  onRefresh,
+  currentWaterIntake = 0,
+  steps: stepsProp = 0,
 }) => {
   // Local state for the picker
-  const [showPicker, setShowPicker] = React.useState(false);
-  const [originalAmount, setOriginalAmount] = React.useState(selectedAmount);
-  const pickerScrollRef = React.useRef<ScrollView>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [originalAmount, setOriginalAmount] = useState(selectedAmount);
+  const pickerScrollRef = useRef<ScrollView>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [waterSettings, setWaterSettings] = useState<{ value?: number; unit?: string } | null>(null);
+  const [steps, setSteps] = useState<number>(stepsProp);
+  const [stepsLoading, setStepsLoading] = useState(false);
 
   const waterOptions = [250, 500, 750, 1000, 1250, 1500, 1750, 2000];
+
+  // Helper to get current date in YYYY-MM-DD format
+  const getCurrentDate = useCallback((): string => {
+    if (date) return date;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, [date]);
+
+  // Fetch water intake settings on mount and when modal opens
+  useEffect(() => {
+    const fetchWaterSettings = async () => {
+      try {
+        console.log("💧 [WaterContent] Fetching water intake settings...");
+        const response = await ProfileAPI.getWaterIntakeSettings();
+        console.log("💧 [WaterContent] Water intake settings response:", JSON.stringify(response, null, 2));
+        
+        // Check if API call was successful (handle both flag and success)
+        const isSuccess = response?.success || (response as any)?.flag === true;
+        if (response && isSuccess && response.data) {
+          const settings = response.data;
+          setWaterSettings(settings);
+          // Update selectedAmount if settings exist
+          if (settings.value) {
+            setSelectedAmount(settings.value);
+            console.log("✅ [WaterContent] Loaded water settings and updated selectedAmount:", settings);
+          } else {
+            console.log("✅ [WaterContent] Loaded water settings (no value):", settings);
+          }
+        } else {
+          console.warn("⚠️ [WaterContent] Water intake settings response not successful or missing data");
+          // Try fallback to wellnessApi if ProfileAPI fails
+          try {
+            const fallbackResponse = await wellnessApi.getWaterIntakeSettings();
+            const fallbackSettings = fallbackResponse?.data || fallbackResponse?.result || fallbackResponse;
+            if (fallbackSettings) {
+              setWaterSettings(fallbackSettings);
+              if (fallbackSettings.value) {
+                setSelectedAmount(fallbackSettings.value);
+              }
+              console.log("✅ [WaterContent] Loaded water settings from fallback API:", fallbackSettings);
+            }
+          } catch (fallbackError) {
+            console.error("❌ [WaterContent] Fallback API also failed:", fallbackError);
+          }
+        }
+      } catch (error: any) {
+        console.error("❌ [WaterContent] Error fetching water settings:", error);
+        // Try fallback to wellnessApi if ProfileAPI fails
+        try {
+          const fallbackResponse = await wellnessApi.getWaterIntakeSettings();
+          const fallbackSettings = fallbackResponse?.data || fallbackResponse?.result || fallbackResponse;
+          if (fallbackSettings) {
+            setWaterSettings(fallbackSettings);
+            if (fallbackSettings.value) {
+              setSelectedAmount(fallbackSettings.value);
+            }
+            console.log("✅ [WaterContent] Loaded water settings from fallback API:", fallbackSettings);
+          }
+        } catch (fallbackError) {
+          console.error("❌ [WaterContent] Fallback API also failed:", fallbackError);
+          // Don't show alert on initial load - just log
+        }
+      }
+    };
+
+    fetchWaterSettings();
+  }, []);
+
+  // Refresh water settings when modal opens
+  useEffect(() => {
+    if (showWaterModal) {
+      const refreshWaterSettings = async () => {
+        try {
+          const response = await ProfileAPI.getWaterIntakeSettings();
+          const isSuccess = response?.success || (response as any)?.flag === true;
+          if (response && isSuccess && response.data) {
+            const settings = response.data;
+            setWaterSettings(settings);
+            if (settings.value) {
+              setSelectedAmount(settings.value);
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing water settings:", error);
+        }
+      };
+      refreshWaterSettings();
+    }
+  }, [showWaterModal, setSelectedAmount]);
+
+  // Fetch steps from dashboard
+  useEffect(() => {
+    const fetchSteps = async () => {
+      try {
+        setStepsLoading(true);
+        const currentDate = getCurrentDate();
+        console.log("🚶 [WaterContent] Fetching steps from dashboard...");
+        console.log("🚶 [WaterContent] Date:", currentDate);
+
+        const dashboardResponse = await wellnessApi.getDashboard(currentDate);
+        console.log("🚶 [WaterContent] Dashboard response:", JSON.stringify(dashboardResponse, null, 2));
+
+        // Extract steps from dashboard response
+        const dashboard = dashboardResponse?.data || dashboardResponse?.result || dashboardResponse;
+        const stepsValue = dashboard?.steps || dashboard?.stepCount || dashboard?.stepsCount || 0;
+        
+        if (stepsValue > 0) {
+          setSteps(stepsValue);
+          console.log("✅ [WaterContent] Steps fetched:", stepsValue);
+        } else {
+          console.log("⚠️ [WaterContent] No steps found in dashboard, using prop value:", stepsProp);
+          setSteps(stepsProp);
+        }
+      } catch (error: any) {
+        console.error("❌ [WaterContent] Error fetching steps:", error);
+        // Fallback to prop value if API fails
+        setSteps(stepsProp);
+      } finally {
+        setStepsLoading(false);
+      }
+    };
+
+    fetchSteps();
+  }, [date, getCurrentDate, stepsProp]);
+
+  // Update steps when prop changes
+  useEffect(() => {
+    if (stepsProp !== undefined && stepsProp !== steps) {
+      setSteps(stepsProp);
+    }
+  }, [stepsProp]);
+
+  // Handle logging water intake (+ button)
+  const handleAddWater = useCallback(async () => {
+    try {
+      setLoading(true);
+      const currentDate = getCurrentDate();
+
+      console.log("=== LOGGING WATER INTAKE ===");
+      console.log("Date:", currentDate);
+
+      const response = await wellnessApi.logWaterIntake({ date: currentDate });
+      console.log("✅ Water intake logged successfully:", response);
+
+      // Refresh dashboard data to show updated water intake
+      if (onRefresh) {
+        onRefresh();
+      }
+
+      Alert.alert("Success", "Water intake logged successfully!");
+    } catch (error: any) {
+      console.error("=== ERROR LOGGING WATER ===");
+      console.error("Error:", error);
+      console.error("Response:", error?.response?.data);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to log water intake. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [getCurrentDate, onRefresh]);
+
+  // Handle removing last water log (- button)
+  const handleRemoveWater = useCallback(async () => {
+    try {
+      setLoading(true);
+      const currentDate = getCurrentDate();
+
+      console.log("=== REMOVING WATER INTAKE ===");
+      console.log("Date:", currentDate);
+
+      const response = await wellnessApi.removeWaterLogIntake({ date: currentDate });
+      console.log("✅ Water intake removed successfully:", response);
+
+      // Refresh dashboard data
+      if (onRefresh) {
+        onRefresh();
+      }
+
+      Alert.alert("Success", "Last water intake entry removed!");
+    } catch (error: any) {
+      console.error("=== ERROR REMOVING WATER ===");
+      console.error("Error:", error);
+      console.error("Response:", error?.response?.data);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to remove water intake. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [getCurrentDate, onRefresh]);
+
+  // Handle saving water settings
+  const handleSaveWaterSettings = useCallback(async () => {
+    try {
+      setSaving(true);
+      const unit = selectedAmount >= 1000 ? "L" : "ml";
+      const value = selectedAmount;
+
+      console.log("=== UPDATING WATER SETTINGS ===");
+      console.log("Value:", value, "Unit:", unit);
+
+      // Save to backend using ProfileAPI or wellnessApi
+      let response;
+      try {
+        // Try using ProfileAPI first (if updateWaterIntakeSettings is available)
+        // Otherwise use wellnessApi
+        response = await wellnessApi.updateWaterIntakeSettings({ value, unit });
+        console.log("✅ [WaterContent] Water settings updated successfully via wellnessApi:", response);
+      } catch (apiError: any) {
+        console.error("❌ [WaterContent] Error updating via wellnessApi:", apiError);
+        throw apiError;
+      }
+
+      // Update local state
+      setWaterSettings({ value, unit });
+      
+      // Update parent component's selectedAmount prop
+      setSelectedAmount(value);
+      
+      // Close modal and picker
+      setShowPicker(false);
+      setShowWaterModal(false);
+
+      Alert.alert("Success", `Water serving size set to ${value} ${unit}!`);
+    } catch (error: any) {
+      console.error("=== ERROR UPDATING WATER SETTINGS ===");
+      console.error("Error:", error);
+      console.error("Response:", error?.response?.data);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to update water settings. Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [selectedAmount, setSelectedAmount]);
 
   // Scroll to selected value when picker opens
   React.useEffect(() => {
@@ -184,7 +443,7 @@ const WaterContent: React.FC<WaterContentProps> = ({
             onPress={() => setShowPopup(true)}
           >
             <Text style={styles.stepText}>
-              <Text style={styles.stepCurrent}>0</Text>
+              <Text style={styles.stepCurrent}>{stepsLoading ? "..." : steps.toLocaleString()}</Text>
               <Text style={styles.stepTotal}> /10,000</Text>
             </Text>
             <Text style={styles.stepText1}>Steps today</Text>
@@ -284,7 +543,10 @@ const WaterContent: React.FC<WaterContentProps> = ({
 
           {/* Amount + Settings Icon in same row */}
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: hp("0.3%") }}>
-            <Text style={styles.waterAmount}>{selectedAmount} ml</Text>
+            <View>
+              <Text style={styles.waterAmount}>{waterSettings?.value} ml</Text>
+              
+            </View>
             <TouchableOpacity onPress={() => setShowWaterModal(true)}>
               <MaterialCommunityIcons
                 name="cog-outline"
@@ -297,13 +559,29 @@ const WaterContent: React.FC<WaterContentProps> = ({
         </View>
 
         {/* Minus Button */}
-        <TouchableOpacity style={styles.circleBtn}>
-          <Text style={styles.circleBtnText}>−</Text>
+        <TouchableOpacity
+          style={[styles.circleBtn, loading && styles.circleBtnDisabled]}
+          onPress={handleRemoveWater}
+          disabled={loading || currentWaterIntake <= 0}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#000" />
+          ) : (
+            <Text style={styles.circleBtnText}>−</Text>
+          )}
         </TouchableOpacity>
 
         {/* Plus Button */}
-        <TouchableOpacity style={[styles.circleBtn, styles.circleBtnDark]}>
-          <Text style={[styles.circleBtnText, { color: "#fff" }]}>+</Text>
+        <TouchableOpacity
+          style={[styles.circleBtn, styles.circleBtnDark, loading && styles.circleBtnDisabled]}
+          onPress={handleAddWater}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={[styles.circleBtnText, { color: "#fff" }]}>+</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -343,7 +621,9 @@ const WaterContent: React.FC<WaterContentProps> = ({
               }}
               disabled={showPicker}
             >
-              <Text style={styles.inputText}>{selectedAmount} ml</Text>
+              <Text style={styles.inputText}>
+                {selectedAmount} {selectedAmount >= 1000 ? "L" : "ml"}
+              </Text>
               <MaterialCommunityIcons
                 name="pencil-outline"
                 size={RFValue(18)}
@@ -384,7 +664,7 @@ const WaterContent: React.FC<WaterContentProps> = ({
                             num === selectedAmount && styles.pickerItemActive,
                           ]}
                         >
-                          {num}
+                          {num} {num >= 1000 ? "L" : "ml"}
                         </Text>
                       </View>
                     ))}
@@ -417,12 +697,15 @@ const WaterContent: React.FC<WaterContentProps> = ({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.pickerSaveBtn}
-                  onPress={() => {
-                    setShowPicker(false);
-                  }}
+                  style={[styles.pickerSaveBtn, saving && { opacity: 0.6 }]}
+                  onPress={handleSaveWaterSettings}
+                  disabled={saving}
                 >
-                  <Text style={styles.pickerSaveText}>Save</Text>
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.pickerSaveText}>Save</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             )}
@@ -540,6 +823,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
     marginTop: hp("0.5%"),
+  },
+  waterServingSize: {
+    fontSize: RFValue(11),
+    fontWeight: "500",
+    color: "#666",
+    marginTop: hp("0.2%"),
   },
   circleBtn: {
     width: wp("8%"),
@@ -732,6 +1021,9 @@ const styles = StyleSheet.create({
     fontSize: RFValue(15),
     fontWeight: "700",
     color: "#fff",
+  },
+  circleBtnDisabled: {
+    opacity: 0.5,
   },
 });
 

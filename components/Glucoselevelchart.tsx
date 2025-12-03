@@ -1,273 +1,213 @@
+import { hp, RFValue, wp } from "@/utils/responsive";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { LineChart } from "react-native-gifted-charts";
-import { RFValue } from "react-native-responsive-fontsize";
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import React, { useEffect, useMemo, useState } from "react";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { LineChart } from "react-native-chart-kit";
+import { Circle, Line } from "react-native-svg";
 import { useRouter } from "expo-router";
+import wellnessApi from "@/api/wellnessApi";
 
-export default function GlucoseLevelChart() {
-  const [activeTab, setActiveTab] = useState("Yearly");
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-  const [rangeMin, setRangeMin] = useState(70);
-  const [rangeMax, setRangeMax] = useState(90);
-  const router = useRouter()
-  // Generate month name based on currentWeekOffset
-  const getMonthName = () => {
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 6 + (currentWeekOffset * 7)); // Start of week
+const screenWidth = Dimensions.get("window").width;
 
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return months[startDate.getMonth()];
+// 🔹 Helper to get Monday of a given week offset
+const getWeekStart = (offset = 0) => {
+  const today = new Date();
+  today.setDate(today.getDate() - today.getDay() + 1 + offset * 7);
+  return today;
+};
+
+// 🔹 Get 7 days of week
+const getWeekDates = (startDate: Date) => {
+  return Array.from({ length: 7 }, (_, idx) => {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + idx);
+    return d;
+  });
+};
+
+export default function GlucoseChart() {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [indicatorIndex, setIndicatorIndex] = useState<number | null>(null);
+  const router = useRouter();
+  const dates = useMemo(() => getWeekDates(getWeekStart(weekOffset)), [weekOffset]);
+  const monthName = dates[0].toLocaleString("default", { month: "long" });
+
+  // Dummy glucose values
+  const values = [110, 130, 100, 140, 150, 120, 135];
+  const avg = Math.round(values.reduce((a, b) => a + b) / values.length);
+
+  const labels = dates.map((d) => `${d.getDate()} ${d.toLocaleString("default", { month: "short" })}`);
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        data: values,
+        color: () => `#015724`,
+        strokeWidth: 3,
+      },
+    ],
   };
 
-  const monthName = getMonthName();
-
-  // Data ending at 20 Nov (index 4)
-  const data = [
-    { value: 68, label: "16 Nov" },
-    { value: 85, label: "17 Nov" },
-    { value: 72, label: "18 Nov" },
-    { value: 92, label: "19 Nov" },
-    { value: 75, label: "20 Nov" }, // Last data point
-  ];
-
-  // Calculate average from data
-  const average = data.reduce((sum, item) => sum + item.value, 0) / data.length;
-  const averageDisplay = `${Math.round(average)} mg/dL`;
-  
-  // Last day index (20 Nov is the last value, index 4)
-  const lastDayIndex = data.length - 1;
-  
-  // Calculate responsive spacing based on data length
-  const chartWidth = wp('75%');
-  const totalSpacing = chartWidth - wp('2.5%') - wp('2%');
-  const spacingPerPoint = totalSpacing / (data.length - 1);
-
-  const handlePreviousWeek = () => {
-    setCurrentWeekOffset(currentWeekOffset - 1);
+  const chartConfig = {
+    backgroundColor: "#FFFFFF",
+    backgroundGradientFrom: "#FFFFFF",
+    backgroundGradientTo: "#FFFFFF",
+    decimalPlaces: 0,
+    color: () => `#015724`,
+    labelColor: () => `rgba(0, 0, 0, 1)`,
+    fillShadowGradient: "#1EA540",
+    fillShadowGradientOpacity: 0.35,
+    propsForBackgroundLines: { strokeWidth: 0 },
   };
 
-  const handleNextWeek = () => {
-    setCurrentWeekOffset(currentWeekOffset + 1);
-  };
+  const chartWidth = screenWidth - 20;
+
+  // 👉 Set indicator to last point initially and when data changes
+  useEffect(() => {
+    if (values.length > 0) {
+      const lastIndex = values.length - 1;
+      setIndicatorIndex(lastIndex);
+      // Don't set indicatorX here - it will be calculated in decorator using actual chart width
+    }
+  }, [weekOffset, values.length]);
+
+
+
+  const handlePreviousWeek = () => setWeekOffset((prev) => prev - 1);
+  const handleNextWeek = () => setWeekOffset((prev) => prev + 1);
 
   return (
-    <View style={{ width: '100%' }}>
-      {/* ---------- CARD ---------- */}
+    <View style={{ paddingHorizontal: 10, backgroundColor: "#FFF" }}>
+
+      {/* Header */}
       <View
         style={{
-          backgroundColor: "#fff",
-          borderRadius: wp('4.5%'),
-          padding: wp('4%'),
-          shadowColor: "#000",
-          shadowOpacity: 0.08,
-          shadowRadius: 6,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: hp("2%"),
+          marginTop: hp("1%"),
         }}
       >
-        {/* AVERAGE AND DATE SECTION - SIDE BY SIDE */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: hp('2%'),
-          }}
-        >
-          {/* AVERAGE - LEFT SIDE */}
-          <View style={{ alignItems: "flex-start" }}>
-            <Text style={{ color: "#777", fontSize: RFValue(12), marginBottom: hp('0.5%') }}>
-              Average
-            </Text>
-            <Text style={{ color: "#111", fontSize: RFValue(16), fontWeight: "600" }}>
-              {averageDisplay}
-            </Text>
-          </View>
-
-          {/* DATE SECTION - RIGHT SIDE */}
-          <View style={{ alignItems: "flex-end" }}>
-            {/* Arrows - Close together */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: hp('0.5%') }}>
-              <TouchableOpacity onPress={handlePreviousWeek}>
-                <Ionicons name="chevron-back" size={RFValue(20)} color="#444" style={{ marginBottom: hp('0.5%'), backgroundColor: '#F4F2FA', borderRadius: wp('50%') }} />
-              </TouchableOpacity>
-              <View style={{ width: wp('3%') }} />
-              <TouchableOpacity onPress={handleNextWeek}>
-                <Ionicons name="chevron-forward" size={RFValue(20)} color="#444" style={{ marginBottom: hp('0.5%'), backgroundColor: '#F4F2FA', borderRadius: wp('50%') }} />
-              </TouchableOpacity>
-            </View>
-            {/* Month Name */}
-            <Text style={{ fontSize: RFValue(10), color: "#444", fontWeight: "600" }}>
-              {monthName}
-            </Text>
-          </View>
+        {/* Average Left */}
+        <View>
+          <Text style={{ color: "#777", fontSize: RFValue(12), marginBottom: hp("0.5%") }}>
+            Average
+          </Text>
+          <Text style={{ color: "#111", fontSize: RFValue(16), fontWeight: "600" }}>
+            {avg}
+          </Text>
         </View>
 
-        {/* ---------- LINE CHART ---------- */}
-        <View style={{ position: "relative", flexDirection: "row" }}>
-          {/* Custom Y-axis labels */}
-          <View
-            style={{
-              width: wp('10%'),
-              justifyContent: "space-between",
-              paddingTop: hp('1.2%'),
-              paddingBottom: hp('2.5%'),
-              paddingRight: wp('2%'),
-            }}
-          >
-            {[90, 80, 70, 60].map((label) => (
-              <Text
-                key={label}
+        {/* Date Navigator Right */}
+        <View style={{ alignItems: "flex-end" }}>
+          <View style={{ flexDirection: "row", marginBottom: hp("0.5%") }}>
+            <TouchableOpacity onPress={handlePreviousWeek}>
+              <Ionicons
+                name="chevron-back"
+                size={RFValue(20)}
+                color="#444"
                 style={{
-                  fontSize: RFValue(11),
-                  color: "#666",
-                  textAlign: "right",
+                  padding: wp("1%"),
+                  backgroundColor: "#F4F2FA",
+                  borderRadius: wp("50%"),
                 }}
-              >
-                {label}
-              </Text>
-            ))}
+              />
+            </TouchableOpacity>
+            <View style={{ width: wp("3%") }} />
+            <TouchableOpacity onPress={handleNextWeek}>
+              <Ionicons
+                name="chevron-forward"
+                size={RFValue(20)}
+                color="#444"
+                style={{
+                  padding: wp("1%"),
+                  backgroundColor: "#F4F2FA",
+                  borderRadius: wp("50%"),
+                }}
+              />
+            </TouchableOpacity>
           </View>
-
-          <View style={{ flex: 1, position: "relative" }}>
-            {/* Range Indicator - Background layer */}
-            <View
-              style={{
-                position: "absolute",
-                left: wp('2.5%'),
-                right: wp('2%'),
-                top: hp('1.2%'),
-                bottom: hp('2.5%'),
-                zIndex: 0,
-              }}
-            >
-              {/* Calculate range position based on maxValue (90) and chart height */}
-              {(() => {
-                const chartHeight = hp('15%') - hp('1.2%') - hp('2.5%');
-                const maxValue = 90;
-                const minValue = 0;
-                
-                // Calculate top position (from top of chart)
-                const rangeTop = ((maxValue - rangeMax) / (maxValue - minValue)) * chartHeight;
-                // Calculate bottom position
-                const rangeBottom = ((maxValue - rangeMin) / (maxValue - minValue)) * chartHeight;
-                const rangeHeight = rangeBottom - rangeTop;
-                
-                return (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: rangeTop,
-                      height: rangeHeight,
-                      width: '100%',
-                      backgroundColor: "#015724",
-                      opacity: 0.15,
-                      borderRadius: wp('1%'),
-                    }}
-                  />
-                );
-              })()}
-            </View>
-            
-            {/* Line Chart */}
-            <LineChart
-              data={data.map((item, index) => ({
-                value: item.value,
-                label: item.label,
-                dataPointColor: "#015724",
-                dataPointRadius: 4,
-                dataPointWidth: 2,
-                // Show dot for all data points
-                showDataPoint: true,
-              }))}
-              width={chartWidth}
-              height={hp('15%')}
-              spacing={spacingPerPoint}
-              initialSpacing={wp('2.5%')}
-              endSpacing={wp('2%')}
-              color="#015724"
-              thickness={3}
-              dataPointsColor="#015724"
-              dataPointsRadius={4}
-              dataPointsWidth={2}
-              curved={false} // Straight lines between points
-              areaChart={false} // No area fill
-              hideRules={false}
-              rulesColor="#E5E7EB"
-              rulesType="solid"
-              xAxisColor="#E5E7EB"
-              yAxisColor="#E5E7EB"
-              yAxisThickness={0}
-              xAxisThickness={1}
-              maxValue={90}
-              noOfSections={3}
-              yAxisLabelWidth={0}
-              xAxisLabelTextStyle={{ 
-                fontSize: RFValue(10), 
-                color: "#444",
-                textAlign: 'center',
-              }}
-              yAxisTextStyle={{ fontSize: RFValue(11), color: "#666" }}
-              showVerticalLines={false}
-              focusEnabled={true}
-              showDataPointOnFocus={true}
-              showStripOnFocus={false}
-            />
-            
-            {/* Current Day Vertical Line Indicator - at last value (20 Nov) */}
-            {(() => {
-              const initialSpacing = wp('2.5%');
-              // Position at the last data point (20 Nov)
-              const xPosition = initialSpacing + (lastDayIndex * spacingPerPoint);
-              
-              return (
-                <View
-                  style={{
-                    position: "absolute",
-                    left: xPosition,
-                    top: 0,
-                    bottom: 0,
-                    width: 2,
-                    backgroundColor: "#015724",
-                    zIndex: 2,
-                  }}
-                />
-              );
-            })()}
-
-            {/* Data Point Dots - Custom implementation for better control */}
-            {data.map((item, index) => {
-              const xPosition = wp('2.5%') + (index * spacingPerPoint);
-              const chartHeight = hp('15%');
-              const maxValue = 90;
-              const minValue = 0;
-              const valueRange = maxValue - minValue;
-              const yPosition = ((maxValue - item.value) / valueRange) * (chartHeight - hp('3.7%')) + hp('1.2%');
-              
-              return (
-                <View
-                  key={index}
-                  style={{
-                    position: "absolute",
-                    left: xPosition - 4, // Center the dot
-                    top: yPosition - 4, // Center the dot
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: "#015724",
-                    borderWidth: 2,
-                    borderColor: "#fff",
-                    zIndex: 3,
-                  }}
-                />
-              );
-            })}
-          </View>
+          <Text style={{ fontSize: RFValue(10), color: "#444", fontWeight: "600" }}>
+            {monthName}
+          </Text>
         </View>
+      </View>
 
-        {/* ---------- FOOTER ---------- */}
-        <View
+      {/* CHART WITH SLIDING INDICATOR */}
+      <View >
+        <LineChart
+          data={data}
+          width={chartWidth}
+          height={260}
+          chartConfig={chartConfig}
+          bezier
+          withDots={false}
+          withInnerLines={false}
+          withOuterLines={false}
+          withVerticalLines={false}
+          withHorizontalLines={false}
+          style={{ borderRadius: 16 }}
+          decorator={({ height, width }: { height: number; width: number }) => {
+            if (indicatorIndex === null || indicatorIndex < 0 || indicatorIndex >= values.length) {
+              return null;
+            }
+
+            // Calculate X position based on actual chart width
+            // react-native-chart-kit uses internal padding (typically 20px on each side)
+            const chartPadding = 20;
+            const availableWidth = width - (chartPadding * 2);
+            const stepX = availableWidth / (values.length - 1);
+            
+            // Calculate actual X position for the indicator
+            const actualX = chartPadding + (indicatorIndex * stepX);
+            
+            // Ensure X is within chart bounds
+            const clampedX = Math.max(chartPadding, Math.min(actualX, width - chartPadding));
+
+            // Calculate y position for the data point
+            // Chart has padding at top and bottom for labels
+            const topPadding = 20;
+            const bottomPadding = 30;
+            const chartHeight = height - topPadding - bottomPadding;
+            
+            const maxValue = Math.max(...values);
+            const minValue = Math.min(...values);
+            const valueRange = maxValue - minValue || 1;
+            const normalizedValue = (values[indicatorIndex] - minValue) / valueRange;
+            
+            // Y coordinate: bottom padding + (inverted normalized value * chart height)
+            const actualY = height - bottomPadding - (normalizedValue * chartHeight);
+            
+            // Ensure Y is within chart bounds
+            const clampedY = Math.max(topPadding, Math.min(actualY, height - bottomPadding));
+
+            return (
+              <>
+                {/* Sliding vertical line */}
+                <Line
+                  x1={clampedX}
+                  y1={topPadding}
+                  x2={clampedX}
+                  y2={height - bottomPadding}
+                  stroke="#015724"
+                  strokeWidth="2"
+                />
+
+                {/* Highlight selected point */}
+                <Circle
+                  cx={clampedX}
+                  cy={clampedY}
+                  r="6"
+                  fill="#015724"
+                />
+              </>
+            );
+          }}
+        />
+      </View>
+
+      <View
           style={{
             marginTop: hp('1.7%'),
             flexDirection: "row",
@@ -276,7 +216,7 @@ export default function GlucoseLevelChart() {
             flexWrap: "wrap",
           }}
         >
-         
+
           <TouchableOpacity
             style={{
                 backgroundColor: "#4B3AAC",
@@ -288,15 +228,15 @@ export default function GlucoseLevelChart() {
                 justifyContent: 'center',
                 marginLeft: wp('30%'),
             }}
-            onPress={() => {router.push ('/screen1/profile/logglucose')}}
+            onPress={()=> {router.push('/screen1/profile/logglucose')}}
           >
             <Text style={{ color: "#fff", fontWeight: "600", fontSize: RFValue(12) }}>
-              Log glucose
+              Log Glucose
             </Text>
           </TouchableOpacity>
-          
+       
         </View>
-      </View>
+
     </View>
   );
 }

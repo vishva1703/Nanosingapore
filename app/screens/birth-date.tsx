@@ -1,4 +1,6 @@
+import wellnessApi from '@/api/wellnessApi';
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -284,7 +286,22 @@ export default function BirthDateScreen() {
                     <View style={styles.bottomContainer}>
                         <TouchableOpacity
                             style={[styles.primaryCta, { opacity: 1 }]}
-                            onPress={() => router.replace('/screens/goalscreen')}
+                            onPress={async () => {
+                                // Create ISO date string from selected date
+                                const dateOfBirth = new Date(year, month, day).toISOString();
+                                
+                                // Save date of birth
+                                try {
+                                    await saveOnboardingData({
+                                        dateOfBirth: dateOfBirth,
+                                    });
+                                    console.log("✅ Saved date of birth:", dateOfBirth);
+                                } catch (error) {
+                                    console.error("Error saving date of birth:", error);
+                                }
+
+                                router.replace('/screens/goalscreen');
+                            }}
                         >
                             <Text style={styles.primaryCtaText}>Next</Text>
                         </TouchableOpacity>
@@ -293,8 +310,18 @@ export default function BirthDateScreen() {
                     <View style={styles.settingsBottomContainer}>
                         <TouchableOpacity
                             style={[styles.primaryCta, { opacity: 1 }]}
-                            onPress={() => router.back()}
-                        >
+                            onPress={async () => {
+                                try {
+                                  const formattedDate = new Date(year, month, day).toISOString();
+                              
+                                  await wellnessApi.setDateOfBirth(formattedDate);
+                              
+                                  router.back();
+                                } catch (error) {
+                                  console.log("Error updating date of birth:", error);
+                                }
+                              }}
+                                                >
                             <Text style={styles.primaryCtaText}>Save</Text>
                         </TouchableOpacity>
                     </View>

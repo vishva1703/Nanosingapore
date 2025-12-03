@@ -1,26 +1,32 @@
+import wellnessApi from "@/api/wellnessApi";
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
 
 export default function LogSleepScreen() {
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
-  const [weight, setWeight] = useState("");
+  const [fellAsleepDate, setFellAsleepDate] = useState(new Date());
+  const [fellAsleepTime, setFellAsleepTime] = useState(new Date());
+  const [wokeUpDate, setWokeUpDate] = useState(new Date());
+  const [wokeUpTime, setWokeUpTime] = useState(new Date());
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showFellAsleepDatePicker, setShowFellAsleepDatePicker] = useState(false);
+  const [showFellAsleepTimePicker, setShowFellAsleepTimePicker] = useState(false);
+  const [showWokeUpDatePicker, setShowWokeUpDatePicker] = useState(false);
+  const [showWokeUpTimePicker, setShowWokeUpTimePicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const formatDateTime = (dateObj: Date, timeObj: Date) => {
     const dateStr = dateObj.toLocaleDateString("en-US", {
@@ -34,6 +40,56 @@ export default function LogSleepScreen() {
     });
 
     return `${dateStr}, ${timeStr}`;
+  };
+
+  // Combine date and time into ISO string
+  const combineDateTime = (date: Date, time: Date): string => {
+    const combined = new Date(date);
+    combined.setHours(time.getHours());
+    combined.setMinutes(time.getMinutes());
+    combined.setSeconds(time.getSeconds());
+    return combined.toISOString();
+  };
+
+  // Handle save sleep
+  const handleSaveSleep = async () => {
+    const fellAsleepDateTime = combineDateTime(fellAsleepDate, fellAsleepTime);
+    const wokeUpDateTime = combineDateTime(wokeUpDate, wokeUpTime);
+
+    // Validate that woke up time is after fell asleep time
+    if (new Date(wokeUpDateTime) <= new Date(fellAsleepDateTime)) {
+      Alert.alert("Error", "Wake up time must be after fall asleep time");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('[LogSleep] Saving sleep:', {
+        fellAsleep: fellAsleepDateTime,
+        wokeUp: wokeUpDateTime,
+      });
+
+      const response = await wellnessApi.logSleep({
+        fellAsleep: fellAsleepDateTime,
+        wokeUp: wokeUpDateTime,
+      });
+
+      console.log('[LogSleep] Sleep saved successfully:', response);
+      Alert.alert("Success", "Sleep logged successfully", [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
+    } catch (error: any) {
+      console.error('[LogSleep] Error saving sleep:', error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || error?.message || "Failed to save sleep. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,61 +115,117 @@ export default function LogSleepScreen() {
 
           {/* CARD */}
           <View style={styles.card}>
-            {/* DATE ROW */}
             <TouchableOpacity
               style={styles.row}
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setShowFellAsleepDatePicker(true)}
             >
-              <Text style={styles.label}>Feel asleep</Text>
+              <Text style={styles.label}>Fell asleep date</Text>
               <Text style={styles.value}>
-                {formatDateTime(date, time)}
+                {formatDateTime(fellAsleepDate, fellAsleepTime)}
               </Text>
-
             </TouchableOpacity>
 
             <TouchableOpacity
-               style={[styles.row, { borderBottomWidth: 0 }]}
-              onPress={() => setShowDatePicker(true)}
+              style={styles.row}
+              onPress={() => setShowFellAsleepTimePicker(true)}
             >
-              <Text style={styles.label}>Woke up</Text>
+              <Text style={styles.label}>Fell asleep time</Text>
               <Text style={styles.value}>
-                {formatDateTime(date, time)}
+                {fellAsleepTime.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
               </Text>
-
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => setShowWokeUpDatePicker(true)}
+            >
+              <Text style={styles.label}>Woke up date</Text>
+              <Text style={styles.value}>
+                {formatDateTime(wokeUpDate, wokeUpTime)}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.row, { borderBottomWidth: 0 }]}
+              onPress={() => setShowWokeUpTimePicker(true)}
+            >
+              <Text style={styles.label}>Woke up time</Text>
+              <Text style={styles.value}>
+                {wokeUpTime.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
         {/* FIXED BOTTOM BUTTON */}
         <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => router.push("/screen1/profile/logheartrate")}>
-            <Text style={styles.buttonText}>Save sleep</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSaveSleep}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Save sleep</Text>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* DATE PICKER */}
-        {showDatePicker && (
+        {/* FELL ASLEEP DATE PICKER */}
+        {showFellAsleepDatePicker && (
           <DateTimePicker
-            value={date}
+            value={fellAsleepDate}
             mode="date"
             display="spinner"
             onChange={(e, d) => {
-              setShowDatePicker(false);
-              if (d) setDate(d);
+              setShowFellAsleepDatePicker(false);
+              if (d) setFellAsleepDate(d);
             }}
           />
         )}
 
-        {/* TIME PICKER */}
-        {showTimePicker && (
+        {/* FELL ASLEEP TIME PICKER */}
+        {showFellAsleepTimePicker && (
           <DateTimePicker
-            value={time}
+            value={fellAsleepTime}
             mode="time"
             display="spinner"
             onChange={(e, t) => {
-              setShowTimePicker(false);
-              if (t) setTime(t);
+              setShowFellAsleepTimePicker(false);
+              if (t) setFellAsleepTime(t);
+            }}
+          />
+        )}
+
+        {/* WOKE UP DATE PICKER */}
+        {showWokeUpDatePicker && (
+          <DateTimePicker
+            value={wokeUpDate}
+            mode="date"
+            display="spinner"
+            onChange={(e, d) => {
+              setShowWokeUpDatePicker(false);
+              if (d) setWokeUpDate(d);
+            }}
+          />
+        )}
+
+        {/* WOKE UP TIME PICKER */}
+        {showWokeUpTimePicker && (
+          <DateTimePicker
+            value={wokeUpTime}
+            mode="time"
+            display="spinner"
+            onChange={(e, t) => {
+              setShowWokeUpTimePicker(false);
+              if (t) setWokeUpTime(t);
             }}
           />
         )}
@@ -188,5 +300,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "600",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

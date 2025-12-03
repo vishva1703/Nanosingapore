@@ -1,0 +1,2965 @@
+{
+  "info": {
+    "name": "Wellness API Collection",
+    "description": "Complete API collection for Wellness Application with all endpoints and request body details",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints",
+      "item": [
+        {
+          "name": "Sign Up with Google",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/sign-up-with-google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "sign-up-with-google"
+              ]
+            },
+            "description": "Sign up a new user with Google authentication",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"string (Google ID token)\",\n  \"platform\": \"string (e.g., \\\"android\\\", \\\"ios\\\", \\\"web\\\")\",\n  \"gender\": \"string (e.g., \\\"male\\\", \\\"female\\\")\",\n  \"activityLevel\": \"string (e.g., \\\"sedentary\\\", \\\"lightly_active\\\", \\\"moderately_active\\\", \\\"very_active\\\", \\\"extremely_active\\\")\",\n  \"unitSystem\": \"string (\\\"Metric\\\" or \\\"Imperial\\\")\",\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  },\n  \"dateOfBirth\": \"string (ISO date format)\",\n  \"goal\": \"string (e.g., \\\"Lose weight\\\", \\\"Gain weight\\\", \\\"Maintain weight\\\")\",\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  },\n  \"changeInWeightPerWeek\": {\n    \"kg\": 0.5,\n    \"lbs\": 1.1\n  },\n  \"goalObstacles\": \"string (optional)\",\n  \"wantToAccomplish\": \"string (optional)\",\n  \"dietType\": \"string (optional)\",\n  \"timezone\": \"string (optional, e.g., \\\"America/New_York\\\")\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign Up with Apple",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/signup-with-apple",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "signup-with-apple"
+              ]
+            },
+            "description": "Sign up a new user with Apple authentication",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"string (Apple ID token)\",\n  \"platform\": \"string\",\n  \"gender\": \"string\",\n  \"activityLevel\": \"string\",\n  \"unitSystem\": \"string\",\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  },\n  \"dateOfBirth\": \"string\",\n  \"goal\": \"string\",\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  },\n  \"changeInWeightPerWeek\": {\n    \"kg\": 0.5,\n    \"lbs\": 1.1\n  },\n  \"goalObstacles\": \"string (optional)\",\n  \"wantToAccomplish\": \"string (optional)\",\n  \"dietType\": \"string (optional)\",\n  \"timezone\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign In with Google",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/sign-in-with-google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "sign-in-with-google"
+              ]
+            },
+            "description": "Sign in an existing user with Google",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"string (Google ID token)\",\n  \"platform\": \"string\",\n  \"timezone\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign In with Apple",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/sign-in-with-apple",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "sign-in-with-apple"
+              ]
+            },
+            "description": "Sign in an existing user with Apple",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"string (Apple ID token)\",\n  \"timezone\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Onboarding Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/onboarding-quiz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "onboarding-quiz"
+              ]
+            },
+            "description": "Complete onboarding quiz to calculate macros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender\": \"string\",\n  \"activityLevel\": \"string\",\n  \"unitSystem\": \"string\",\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  },\n  \"dateOfBirth\": \"string\",\n  \"goal\": \"string\",\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  },\n  \"changeInWeightPerWeek\": {\n    \"kg\": 0.5,\n    \"lbs\": 1.1\n  },\n  \"goalObstacles\": \"string (optional)\",\n  \"wantToAccomplish\": \"string (optional)\",\n  \"dietType\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Auto Generate Macro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/auto-generate-macro",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "auto-generate-macro"
+              ]
+            },
+            "description": "Auto generate macro nutrients based on user info",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender\": \"string\",\n  \"activityLevel\": \"string\",\n  \"unitSystem\": \"string\",\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  },\n  \"dateOfBirth\": \"string\",\n  \"goal\": \"string\",\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  },\n  \"changeInWeightPerWeek\": {\n    \"kg\": 0.5,\n    \"lbs\": 1.1\n  },\n  \"goalObstacles\": \"string (optional)\",\n  \"wantToAccomplish\": \"string (optional)\",\n  \"dietType\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login with Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with email/name",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailId\": \"string\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard endpoints",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard"
+              ]
+            },
+            "description": "Get dashboard data for a specific date",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date format, e.g., \\\"2025-01-15\\\")\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Auto Generate Macro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/auto-generate-macro",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "auto-generate-macro"
+              ]
+            },
+            "description": "Auto generate macro nutrients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender\": \"string\",\n  \"activityLevel\": \"string\",\n  \"unitSystem\": \"string\",\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  },\n  \"dateOfBirth\": \"string\",\n  \"goal\": \"string\",\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  },\n  \"changeInWeightPerWeek\": {\n    \"kg\": 0.5,\n    \"lbs\": 1.1\n  },\n  \"goalObstacles\": \"string (optional)\",\n  \"wantToAccomplish\": \"string (optional)\",\n  \"dietType\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Previous Log Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/previous-log-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "previous-log-status"
+              ]
+            },
+            "description": "Get previous log status for calendar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Water Intake Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/water-intake-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "water-intake-settings"
+              ]
+            },
+            "description": "Update water serving size settings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 250,\n  \"unit\": \"string (\\\"ml\\\" or \\\"L\\\")\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Water Intake Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/water-intake-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "water-intake-settings"
+              ]
+            },
+            "description": "Get water serving size settings"
+          }
+        },
+        {
+          "name": "Log Water Intake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/log-water-intake",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "log-water-intake"
+              ]
+            },
+            "description": "Log water intake for a date",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove Water Log Intake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/remove-water-log-intake",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "remove-water-log-intake"
+              ]
+            },
+            "description": "Remove last water log entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Recent Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/recent-log",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "recent-log"
+              ]
+            },
+            "description": "Get recent logs with pagination",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Macro Goal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/update-macro-goal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "update-macro-goal"
+              ]
+            },
+            "description": "Update macro goal for a specific date",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduleDate\": \"string (ISO date format)\",\n  \"macroGoal\": {\n    \"calories\": {\n      \"value\": 2000,\n      \"unit\": \"Cal\"\n    },\n    \"protein\": {\n      \"value\": 150,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 200,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 65,\n      \"unit\": \"g\"\n    }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Store Third Party Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/dashboard/store-third-party-data",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "dashboard",
+                "store-third-party-data"
+              ]
+            },
+            "description": "Store steps data from third-party integrations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date format)\",\n  \"steps\": 10000\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scan",
+      "description": "Scan endpoints for food analysis",
+      "item": [
+        {
+          "name": "Scan Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/food",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "food"
+              ]
+            },
+            "description": "Scan food image and analyze nutritional information",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "date",
+                  "value": "\"string (ISO date format)\"",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Scan Barcode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/barcode",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "barcode"
+              ]
+            },
+            "description": "Scan barcode to get product nutritional info",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"barcode\": \"string\",\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Scan Food Label",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/food-label",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "food-label"
+              ]
+            },
+            "description": "Scan food label image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "date",
+                  "value": "\"string (ISO date format)\"",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Scan Detail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "detail"
+              ]
+            },
+            "description": "Get scan meal details",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string (optional)\",\n  \"scanMealId\": \"string (required)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Scan Detail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/update-detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "update-detail"
+              ]
+            },
+            "description": "Update scan meal details",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string (required)\",\n  \"scanMealId\": \"string (required)\",\n  \"name\": \"string\",\n  \"servingCount\": 1,\n  \"calories\": {\n    \"value\": 0,\n    \"unit\": \"Cal\"\n  },\n  \"fats\": {\n    \"value\": 0,\n    \"unit\": \"g\"\n  },\n  \"proteins\": {\n    \"value\": 0,\n    \"unit\": \"g\"\n  },\n  \"carbs\": {\n    \"value\": 0,\n    \"unit\": \"g\"\n  },\n  \"items\": []\n}"
+            }
+          }
+        },
+        {
+          "name": "Fix Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/fix-result",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "fix-result"
+              ]
+            },
+            "description": "Fix/regenerate scan result with additional text",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scanMealId\": \"string\",\n  \"logId\": \"string (optional)\",\n  \"text\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Ingredient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/add-ingredient",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "add-ingredient"
+              ]
+            },
+            "description": "Add ingredient to scan meal",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scanMealId\": \"string\",\n  \"logId\": \"string\",\n  \"name\": \"string\",\n  \"description\": \"string (nutritional text)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Ingredient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/scan/delete-ingredient",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "scan",
+                "delete-ingredient"
+              ]
+            },
+            "description": "Delete ingredient from scan meal",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scanMealId\": \"string\",\n  \"logId\": \"string\",\n  \"itemId\": \"string\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "My Food",
+      "description": "Custom food management endpoints",
+      "item": [
+        {
+          "name": "Add/Update Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-food/add-update-food",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-food",
+                "add-update-food"
+              ]
+            },
+            "description": "Add or update custom food entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodId\": \"string (optional, for update)\",\n  \"brandName\": \"string\",\n  \"description\": \"string\",\n  \"servingSize\": {\n    \"value\": 100,\n    \"unit\": \"g\"\n  },\n  \"servingPerContainer\": 1,\n  \"calories\": {\n    \"value\": 250,\n    \"unit\": \"Cal\"\n  },\n  \"macronutrients\": {\n    \"protein\": {\n      \"value\": 20,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 30,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 10,\n      \"unit\": \"g\"\n    }\n  },\n  \"fats\": {\n    \"saturated\": {\n      \"value\": 5,\n      \"unit\": \"g\"\n    },\n    \"polyunsaturated\": {\n      \"value\": 2,\n      \"unit\": \"g\"\n    },\n    \"monounsaturated\": {\n      \"value\": 3,\n      \"unit\": \"g\"\n    },\n    \"trans\": {\n      \"value\": 0,\n      \"unit\": \"g\"\n    }\n  },\n  \"carbs\": {\n    \"sugar\": {\n      \"value\": 5,\n      \"unit\": \"g\"\n    },\n    \"fiber\": {\n      \"value\": 3,\n      \"unit\": \"g\"\n    }\n  },\n  \"microNutrients\": {\n    \"minerals\": {\n      \"cholesterol\": {\n        \"value\": 0,\n        \"unit\": \"mg\"\n      },\n      \"sodium\": {\n        \"value\": 500,\n        \"unit\": \"mg\"\n      },\n      \"potassium\": {\n        \"value\": 200,\n        \"unit\": \"mg\"\n      }\n    },\n    \"vitamin\": {\n      \"A\": {\n        \"value\": 0,\n        \"unit\": \"mcg\"\n      },\n      \"C\": {\n        \"value\": 0,\n        \"unit\": \"mg\"\n      },\n      \"calcium\": {\n        \"value\": 0,\n        \"unit\": \"mg\"\n      },\n      \"iron\": {\n        \"value\": 0,\n        \"unit\": \"mg\"\n      }\n    }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Food List",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-food/food-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-food",
+                "food-list"
+              ]
+            },
+            "description": "Get list of custom foods with pagination",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"search\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Food Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-food/food-details/:foodId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-food",
+                "food-details",
+                ":foodId"
+              ]
+            },
+            "description": "Get details of a specific food"
+          }
+        },
+        {
+          "name": "Log Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-food/log-food",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-food",
+                "log-food"
+              ]
+            },
+            "description": "Log a custom food entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodId\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Food",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-food/:foodId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-food",
+                ":foodId"
+              ]
+            },
+            "description": "Delete a custom food entry"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Log Exercise",
+      "description": "Exercise logging endpoints",
+      "item": [
+        {
+          "name": "Log Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/log-exercise/log-run",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "log-exercise",
+                "log-run"
+              ]
+            },
+            "description": "Log running exercise",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string (optional, for update)\",\n  \"intensity\": \"string (low, medium, high)\",\n  \"duration\": 30,\n  \"date\": \"string (ISO date format, optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Weight Lifting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/log-exercise/log-weight-lifting",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "log-exercise",
+                "log-weight-lifting"
+              ]
+            },
+            "description": "Log weight lifting exercise",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string (optional, for update)\",\n  \"intensity\": \"string (low, medium, high)\",\n  \"duration\": 45,\n  \"date\": \"string (ISO date format, optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log By Describe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/log-exercise/log-by-describe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "log-exercise",
+                "log-by-describe"
+              ]
+            },
+            "description": "Log exercise by describing activity",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string (optional, for update)\",\n  \"description\": \"string\",\n  \"date\": \"string (ISO date format, optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Log",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/log-exercise/log/:logId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "log-exercise",
+                "log",
+                ":logId"
+              ]
+            },
+            "description": "Delete an exercise log"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intermittent Fasting",
+      "description": "Fasting management endpoints",
+      "item": [
+        {
+          "name": "Get Fasting Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "dashboard"
+              ]
+            },
+            "description": "Get fasting dashboard information"
+          }
+        },
+        {
+          "name": "Start Fasting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/start-fasting",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "start-fasting"
+              ]
+            },
+            "description": "Start a fasting session",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"durationHours\": 16\n}"
+            }
+          }
+        },
+        {
+          "name": "End Fasting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/end-fasting",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "end-fasting"
+              ]
+            },
+            "description": "End current fasting session"
+          }
+        },
+        {
+          "name": "Get Fasting Presets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/fasting-presets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "fasting-presets"
+              ]
+            },
+            "description": "Get available fasting presets"
+          }
+        },
+        {
+          "name": "Add Fasting Preset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/add-fasting-presets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "add-fasting-presets"
+              ]
+            },
+            "description": "Add custom fasting preset",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hours\": 16,\n  \"description\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Fasting Preset",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/intermitted-fasting/fasting-preset/:presetId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "intermitted-fasting",
+                "fasting-preset",
+                ":presetId"
+              ]
+            },
+            "description": "Delete a fasting preset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "description": "Profile and chart endpoints",
+      "item": [
+        {
+          "name": "Get Profile Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "dashboard"
+              ]
+            },
+            "description": "Get profile dashboard data"
+          }
+        },
+        {
+          "name": "Get Calendar Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/calendar-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "calendar-chart"
+              ]
+            },
+            "description": "Get calendar chart data"
+          }
+        },
+        {
+          "name": "Get Weight Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/weight-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "weight-chart"
+              ]
+            },
+            "description": "Get weight chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Fasting Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/fasting-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "fasting-chart"
+              ]
+            },
+            "description": "Get fasting chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Activity Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/activity-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "activity-chart"
+              ]
+            },
+            "description": "Get activity chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Sleep Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/sleep-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "sleep-chart"
+              ]
+            },
+            "description": "Get sleep chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get RHR Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/rhr-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "rhr-chart"
+              ]
+            },
+            "description": "Get resting heart rate chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Calorie Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/calorie-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "calorie-chart"
+              ]
+            },
+            "description": "Get calorie chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Glucose Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/glucose-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "glucose-chart"
+              ]
+            },
+            "description": "Get glucose chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Ketone Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/ketone-chart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "ketone-chart"
+              ]
+            },
+            "description": "Get ketone chart data",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sDate\": \"string (optional)\",\n  \"eDate\": \"string (optional)\",\n  \"trend\": \"string (weekly, monthly, yearly)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Current Weight",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/set-current-weight",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "set-current-weight"
+              ]
+            },
+            "description": "Update current weight",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Goal Weight",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/set-goal-weight",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "set-goal-weight"
+              ]
+            },
+            "description": "Update goal weight",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Weight",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-weight",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-weight"
+              ]
+            },
+            "description": "Log weight entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date)\",\n  \"time\": \"string (ISO time)\",\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Sleep",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-sleep",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-sleep"
+              ]
+            },
+            "description": "Log sleep entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fellAsleep\": \"string (ISO datetime)\",\n  \"wokeUp\": \"string (ISO datetime)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-activity",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-activity"
+              ]
+            },
+            "description": "Log activity entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"string\",\n  \"startTime\": \"string (ISO datetime)\",\n  \"endTime\": \"string (ISO datetime)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Resting Heart Rate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-rhr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-rhr"
+              ]
+            },
+            "description": "Log resting heart rate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date)\",\n  \"time\": \"string (ISO time)\",\n  \"bpm\": 72\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Calorie Intake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-calorie-intake",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-calorie-intake"
+              ]
+            },
+            "description": "Log manual calorie intake",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date)\",\n  \"time\": \"string (ISO time)\",\n  \"calories\": 250\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Glucose Levels",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-glucose-levels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-glucose-levels"
+              ]
+            },
+            "description": "Log glucose level",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date)\",\n  \"time\": \"string (ISO time)\",\n  \"level\": 95\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Ketone Levels",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/log-ketone-levels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "log-ketone-levels"
+              ]
+            },
+            "description": "Log ketone level",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"string (ISO date)\",\n  \"time\": \"string (ISO time)\",\n  \"level\": 0.5\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Macro Nutrient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/update-macro-nutrient",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "update-macro-nutrient"
+              ]
+            },
+            "description": "Update macro nutrient goals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"macroNutrient\": {\n    \"calories\": {\n      \"value\": 2000,\n      \"unit\": \"Cal\"\n    },\n    \"protein\": {\n      \"value\": 150,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 200,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 65,\n      \"unit\": \"g\"\n    }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/update-name",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "update-name"
+              ]
+            },
+            "description": "Update user name",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Upload Profile Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/profile/upload-profile-img",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "profile",
+                "upload-profile-img"
+              ]
+            },
+            "description": "Upload profile image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Food Search",
+      "description": "Food search and logging endpoints",
+      "item": [
+        {
+          "name": "Get Recently Logged",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/recently-logged",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "recently-logged"
+              ]
+            },
+            "description": "Get recently logged foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"date\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Re-Log Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/re-log",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "re-log"
+              ]
+            },
+            "description": "Re-log a previously logged food",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Autocomplete Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/autocomplete",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "autocomplete"
+              ]
+            },
+            "description": "Get food autocomplete suggestions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"search\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Search Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "search"
+              ]
+            },
+            "description": "Search for foods",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"search\": \"string\",\n  \"page\": 0,\n  \"limit\": 10\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Food Detail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/food-detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "food-detail"
+              ]
+            },
+            "description": "Get detailed food information",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodId\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/log-food",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "log-food"
+              ]
+            },
+            "description": "Log a food from search",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodId\": \"string\",\n  \"date\": \"string (ISO date format, optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Food With Serving",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/log-food-with-serving",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "log-food-with-serving"
+              ]
+            },
+            "description": "Log food with custom serving size",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodId\": \"string\",\n  \"servingId\": \"string\",\n  \"serviceSize\": {\n    \"value\": 1,\n    \"unit\": \"serving\"\n  },\n  \"calories\": {\n    \"value\": 250,\n    \"unit\": \"Cal\"\n  },\n  \"macronutrients\": {\n    \"protein\": {\n      \"value\": 20,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 30,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 10,\n      \"unit\": \"g\"\n    }\n  },\n  \"date\": \"string (ISO date format, optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Log Food",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/food-search/update-log-food",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "food-search",
+                "update-log-food"
+              ]
+            },
+            "description": "Update logged food entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"string\",\n  \"serviceSize\": {\n    \"value\": 1.5,\n    \"unit\": \"serving\"\n  },\n  \"calories\": {\n    \"value\": 375,\n    \"unit\": \"Cal\"\n  },\n  \"macronutrients\": {\n    \"protein\": {\n      \"value\": 30,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 45,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 15,\n      \"unit\": \"g\"\n    }\n  }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "My Meal",
+      "description": "Custom meal management endpoints",
+      "item": [
+        {
+          "name": "Add/Update Meal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-meal/add-update-meal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-meal",
+                "add-update-meal"
+              ]
+            },
+            "description": "Add or update custom meal",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"myMealId\": \"string (optional, for update)\",\n  \"mealName\": \"string\",\n  \"calories\": {\n    \"value\": 500,\n    \"unit\": \"Cal\"\n  },\n  \"macronutrients\": {\n    \"protein\": {\n      \"value\": 30,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 50,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 20,\n      \"unit\": \"g\"\n    }\n  },\n  \"fats\": {},\n  \"carbs\": {},\n  \"microNutrients\": {},\n  \"items\": []\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Meal List",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-meal/meal-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-meal",
+                "meal-list"
+              ]
+            },
+            "description": "Get list of custom meals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"search\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Meal Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-meal/meal-details/:mealId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-meal",
+                "meal-details",
+                ":mealId"
+              ]
+            },
+            "description": "Get details of a specific meal"
+          }
+        },
+        {
+          "name": "Log Meal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-meal/log-meal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-meal",
+                "log-meal"
+              ]
+            },
+            "description": "Log a custom meal",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mealId\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Meal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/my-meal/:mealId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "my-meal",
+                ":mealId"
+              ]
+            },
+            "description": "Delete a custom meal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Setting",
+      "description": "User settings endpoints",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/get-setting",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "get-setting"
+              ]
+            },
+            "description": "Get user settings"
+          }
+        },
+        {
+          "name": "Get Goals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/get-goals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "get-goals"
+              ]
+            },
+            "description": "Get user macro goals"
+          }
+        },
+        {
+          "name": "Get Personal Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/get-personal-details",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "get-personal-details"
+              ]
+            },
+            "description": "Get user personal details"
+          }
+        },
+        {
+          "name": "Toggle Burned Calories Flag",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/toggle-burned-calories-flag",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "toggle-burned-calories-flag"
+              ]
+            },
+            "description": "Toggle burned calories flag"
+          }
+        },
+        {
+          "name": "Set Height Weight",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/set-height-weight",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "set-height-weight"
+              ]
+            },
+            "description": "Update height and weight",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"height\": {\n    \"cm\": 170,\n    \"feet\": 5,\n    \"inches\": 7\n  },\n  \"weight\": {\n    \"kg\": 70,\n    \"lbs\": 154\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Weight Goal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/set-weight-goal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "set-weight-goal"
+              ]
+            },
+            "description": "Update weight goal",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goalWeight\": {\n    \"kg\": 65,\n    \"lbs\": 143\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Birth Date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/set-birth-date",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "set-birth-date"
+              ]
+            },
+            "description": "Update birth date",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateOfBirth\": \"string (ISO date format)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Gender",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/set-gender",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "set-gender"
+              ]
+            },
+            "description": "Update gender",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender\": \"string\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Maintain",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/maintain",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "maintain"
+              ]
+            },
+            "description": "Maintain database (admin)"
+          }
+        },
+        {
+          "name": "Calculate BMR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/calculateBMR",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "calculateBMR"
+              ]
+            },
+            "description": "Calculate BMR for all users (admin)"
+          }
+        },
+        {
+          "name": "Calculate Steps Energy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/calculateStepsEnergy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "calculateStepsEnergy"
+              ]
+            },
+            "description": "Calculate steps energy (admin)"
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/setting/account",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "setting",
+                "account"
+              ]
+            },
+            "description": "Delete user account"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saved Scan",
+      "description": "Saved scan management endpoints",
+      "item": [
+        {
+          "name": "Save Scan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/saved-scan/save",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "saved-scan",
+                "save"
+              ]
+            },
+            "description": "Save a scan or food for later",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scanMealId\": \"string (optional)\",\n  \"mealName\": \"string\",\n  \"calories\": {\n    \"value\": 250,\n    \"unit\": \"Cal\"\n  },\n  \"macronutrients\": {\n    \"protein\": {\n      \"value\": 20,\n      \"unit\": \"g\"\n    },\n    \"carbs\": {\n      \"value\": 30,\n      \"unit\": \"g\"\n    },\n    \"fats\": {\n      \"value\": 10,\n      \"unit\": \"g\"\n    }\n  },\n  \"foodId\": \"string (optional)\",\n  \"servingId\": \"string (optional)\",\n  \"serviceSize\": {\n    \"value\": 1,\n    \"unit\": \"serving\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Saved Scans",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/saved-scan/list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "saved-scan",
+                "list"
+              ]
+            },
+            "description": "Get list of saved scans",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"search\": \"string (optional)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Saved Scan",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/saved-scan/:savedScanId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "saved-scan",
+                ":savedScanId"
+              ]
+            },
+            "description": "Delete a saved scan"
+          }
+        },
+        {
+          "name": "Log Saved Scan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nutrition-api/saved-scan/log/:savedScanId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "nutrition-api",
+                "saved-scan",
+                "log",
+                ":savedScanId"
+              ]
+            },
+            "description": "Log a saved scan"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,10 @@
+import wellnessApi from "@/api/wellnessApi";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
@@ -30,6 +33,8 @@ export default function CreateMeal() {
     const [inputType, setInputType] = useState<"decimal" | "fraction">("decimal");
     const [selectedNumber, setSelectedNumber] = useState(1);
     const [selectedFraction, setSelectedFraction] = useState("1/3");
+    const [loading, setLoading] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const numbersList = Array.from({ length: 20 }, (_, i) => i + 1);
     const fractions = ["1/8", "1/6", "1/4", "1/3", "1/2", "2/3", "3/4"];
@@ -144,6 +149,134 @@ export default function CreateMeal() {
 
     const isCreateMealEnabled = mealName.trim().length > 0 && mealItems.length > 0;
 
+    // Handle create meal action
+    const handleCreateMeal = async () => {
+        if (!mealName.trim() || mealItems.length === 0) {
+            Alert.alert("Error", "Please provide a meal name and add at least one food item.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // Prepare meal payload for API
+            // Structure it as a meal with items
+            const mealPayload: any = {
+                description: mealName.trim(),
+                brand: undefined, // Meals don't have brands
+                type: "meal", // Mark as meal type
+                servingSize: undefined,
+                servingsPerContainer: undefined,
+                // Total nutrition values
+                calories: totalNutrition.calories,
+                protein: totalNutrition.protein,
+                carbs: totalNutrition.carbs,
+                fat: totalNutrition.fat,
+                // Meal items - array of food IDs and servings
+                mealItems: mealItems.map(item => ({
+                    foodId: item.id,
+                    name: item.name || item.description,
+                    description: item.description,
+                    brand: item.brand,
+                    calories: parseFloat(item.calories || "0"),
+                    protein: parseFloat(item.protein || "0"),
+                    carbs: parseFloat(item.carbs || "0"),
+                    fat: parseFloat(item.fat || "0"),
+                    servingSize: item.servingSize,
+                })),
+            };
+
+            // Remove undefined values
+            Object.keys(mealPayload).forEach(key => {
+                if (mealPayload[key] === undefined) {
+                    delete mealPayload[key];
+                }
+            });
+
+            console.log("📝 Saving meal to backend:", mealPayload);
+
+            // Call API to add/update meal
+            const apiResponse = await wellnessApi.addOrUpdateFood(mealPayload);
+
+            console.log("✅ Meal saved to backend:", apiResponse);
+
+            // Extract meal ID from API response
+            const mealId = apiResponse?.data?.id ||
+                          apiResponse?.data?.foodId ||
+                          apiResponse?.id ||
+                          apiResponse?.foodId ||
+                          Date.now().toString();
+
+            Alert.alert(
+                "Success",
+                "Meal created successfully!",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            );
+        } catch (error: any) {
+            console.error("❌ Error creating meal:", error);
+            Alert.alert(
+                "Error",
+                error?.response?.data?.message || error?.message || "Failed to create meal. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle delete meal action
+    const handleDeleteMeal = async () => {
+        // Check if this is an existing meal being edited (has mealId in params)
+        const getParam = (param: string | string[] | undefined): string => {
+            return Array.isArray(param) ? param[0] : (param || "");
+        };
+        
+        const mealId = getParam(params.mealId);
+        
+        if (!mealId) {
+            // If it's a new meal being created, just go back
+            router.back();
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setShowDeleteModal(false);
+
+            // Call API to delete meal
+            await wellnessApi.deleteFood(mealId);
+            
+            console.log("✅ Meal deleted from backend:", mealId);
+
+            Alert.alert(
+                "Success",
+                "Meal deleted successfully!",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            );
+        } catch (error: any) {
+            console.error("❌ Error deleting meal:", error);
+            Alert.alert(
+                "Error",
+                error?.response?.data?.message || error?.message || "Failed to delete meal. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -207,13 +340,12 @@ export default function CreateMeal() {
                                 style={styles.menuItem}
                                 onPress={() => {
                                     setShowMenu(false);
-                                    // Handle delete food
-                                    console.log("Delete food");
-                                    router.back();
+                                    setShowDeleteModal(true);
                                 }}
+                                disabled={loading}
                             >
                                 <Ionicons name="trash-outline" size={RFValue(18)} color="#FF3B30" />
-                                <Text style={[styles.menuItemText, styles.deleteText]}>Delete food</Text>
+                                <Text style={[styles.menuItemText, styles.deleteText]}>Delete meal</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -389,22 +521,63 @@ export default function CreateMeal() {
                     <TouchableOpacity
                         style={[
                             styles.createMealButton,
-                            !isCreateMealEnabled && styles.createMealButtonDisabled
+                            (!isCreateMealEnabled || loading) && styles.createMealButtonDisabled
                         ]}
-                        disabled={!isCreateMealEnabled}
-                        onPress={() => {
-                            // Handle create meal action
-                            console.log("Create meal:", { mealName, mealItems });
-                        }}
+                        disabled={!isCreateMealEnabled || loading}
+                        onPress={handleCreateMeal}
                     >
-                        <Text style={[
-                            styles.createMealButtonText,
-                            !isCreateMealEnabled && styles.createMealButtonTextDisabled
-                        ]}>
-                            Create meal
-                        </Text>
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                            <Text style={[
+                                styles.createMealButtonText,
+                                !isCreateMealEnabled && styles.createMealButtonTextDisabled
+                            ]}>
+                                Create meal
+                            </Text>
+                        )}
                     </TouchableOpacity>
                 </View>
+
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    transparent={true}
+                    animationType="fade"
+                    visible={showDeleteModal}
+                    onRequestClose={() => setShowDeleteModal(false)}
+                >
+                    <View style={styles.deleteModalOverlay}>
+                        <View style={styles.deleteModalContent}>
+                            <Ionicons name="trash-outline" size={48} color="#FF3B30" style={styles.deleteModalIcon} />
+                            <Text style={styles.deleteModalTitle}>Delete Meal?</Text>
+                            <Text style={styles.deleteModalMessage}>
+                                Are you sure you want to delete this meal? This action cannot be undone.
+                            </Text>
+                            
+                            <View style={styles.deleteModalButtons}>
+                                <TouchableOpacity
+                                    style={[styles.deleteModalButton, styles.deleteModalButtonCancel]}
+                                    onPress={() => setShowDeleteModal(false)}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.deleteModalButtonTextCancel}>Cancel</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity
+                                    style={[styles.deleteModalButton, styles.deleteModalButtonDelete]}
+                                    onPress={handleDeleteMeal}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <ActivityIndicator size="small" color="#FFF" />
+                                    ) : (
+                                        <Text style={styles.deleteModalButtonTextDelete}>Delete</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
 
                 {/* Servings Edit Modal */}
                 <Modal
@@ -1093,6 +1266,76 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontSize: RFValue(16),
         fontWeight: "600",
+    },
+
+    deleteModalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+
+    deleteModalContent: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: wp("6%"),
+        padding: wp("6%"),
+        width: wp("85%"),
+        alignItems: "center",
+    },
+
+    deleteModalIcon: {
+        marginBottom: hp("2%"),
+    },
+
+    deleteModalTitle: {
+        fontSize: RFValue(20),
+        fontWeight: "700",
+        color: "#111",
+        marginBottom: hp("1%"),
+    },
+
+    deleteModalMessage: {
+        fontSize: RFValue(14),
+        color: "#666",
+        textAlign: "center",
+        marginBottom: hp("3%"),
+        lineHeight: RFValue(20),
+    },
+
+    deleteModalButtons: {
+        flexDirection: "row",
+        gap: wp("3%"),
+        width: "100%",
+    },
+
+    deleteModalButton: {
+        flex: 1,
+        paddingVertical: hp("1.5%"),
+        borderRadius: wp("4%"),
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    deleteModalButtonCancel: {
+        backgroundColor: "#F5F5F5",
+        borderWidth: 1,
+        borderColor: "#E0E0E0",
+    },
+
+    deleteModalButtonDelete: {
+        backgroundColor: "#FF3B30",
+    },
+
+    deleteModalButtonTextCancel: {
+        fontSize: RFValue(14),
+        fontWeight: "600",
+        color: "#111",
+    },
+
+    deleteModalButtonTextDelete: {
+        fontSize: RFValue(14),
+        fontWeight: "600",
+        color: "#FFF",
     },
 });
 

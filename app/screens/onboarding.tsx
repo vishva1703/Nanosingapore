@@ -1,4 +1,6 @@
+import wellnessApi from '@/api/wellnessApi';
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -127,7 +129,20 @@ export default function OnboardingScreen() {
                 !(selectedGender && selectedLanguage) && { opacity: 0.6 },
               ]}
               disabled={!selectedGender}
-              onPress={() => router.push('/screens/workout-frequency')}
+              onPress={async () => {
+                // Save gender data before navigating
+                if (selectedGender) {
+                  try {
+                    await saveOnboardingData({
+                      gender: selectedGender.toLowerCase(), // "male", "female", "other"
+                    });
+                    console.log("✅ Saved gender:", selectedGender.toLowerCase());
+                  } catch (error) {
+                    console.error("Error saving gender:", error);
+                  }
+                }
+                router.push('/screens/workout-frequency');
+              }}
             >
               <Text style={styles.primaryCtaText}>Next</Text>
             </TouchableOpacity>
@@ -140,7 +155,17 @@ export default function OnboardingScreen() {
                 !selectedGender && { opacity: 0.6 },
               ]}
               disabled={!selectedGender}
-              onPress={() => router.back()}
+              onPress={async () => {
+                if (!selectedGender) return;
+              
+                try {
+                  await wellnessApi.setGender(selectedGender.toLowerCase());
+                  router.back();
+                } catch (error) {
+                  console.log("Error updating gender:", error);
+                }
+              }}
+              
             >
               <Text style={styles.primaryCtaText}>Save</Text>
             </TouchableOpacity>

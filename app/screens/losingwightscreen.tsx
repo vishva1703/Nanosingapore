@@ -1,13 +1,13 @@
 import ProgressBar from '@/components/ProgressBar';
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { getOnboardingData } from '@/utils/onboardingStorage';
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,8 +15,43 @@ const { width } = Dimensions.get("window");
 
 export default function RealisticTargetScreen() {
   const router = useRouter();
+  const [goalAction, setGoalAction] = useState("Losing");
+  const [weightPerWeek, setWeightPerWeek] = useState(0.8);
 
-//   const targetWeight = 09.9;
+  // Load goal and weight per week from storage
+  const loadData = useCallback(async () => {
+    try {
+      const onboardingData = await getOnboardingData();
+      
+      // Load goal and set action text
+      if (onboardingData?.goal) {
+        const goal = onboardingData.goal.toLowerCase();
+        if (goal.includes("lose")) {
+          setGoalAction("Losing");
+        } else if (goal.includes("maintain")) {
+          setGoalAction("Maintaining");
+        } else if (goal.includes("gain")) {
+          setGoalAction("Gaining");
+        } else {
+          setGoalAction("Losing"); // default fallback
+        }
+      }
+
+      // Load weight per week from fastgoalscreen
+      if (onboardingData?.changeInWeightPerWeek?.kg) {
+        setWeightPerWeek(onboardingData.changeInWeightPerWeek.kg);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  }, []);
+
+  // Load data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -38,9 +73,9 @@ export default function RealisticTargetScreen() {
         {/* 🔹 Center Content */}
         <View style={styles.centerContent}>
           <Text style={styles.mainText}>
-            Losing{" "}
-            <Text >09.9 kg</Text>{" "}
-            is a realistic target. It’s not hard at all!
+            {goalAction}{" "}
+            <Text style={styles.highlightText}>{weightPerWeek.toFixed(1)} kg</Text>{" "}
+            is a realistic target. It's not hard at all!
           </Text>
 
           <Text style={styles.subText}>
@@ -123,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   highlightText: {
-    color: "#4B3AAC",
+    color: "#111",
     fontWeight: "800",
   },
   subText: {

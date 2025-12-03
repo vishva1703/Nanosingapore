@@ -1,15 +1,15 @@
 import ProgressBar from '@/components/ProgressBar';
-import { Ionicons } from "@expo/vector-icons";
+import { getOnboardingData, saveOnboardingData } from '@/utils/onboardingStorage';
 import Slider from "@react-native-community/slider";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,6 +21,36 @@ export default function FastGoalScreen() {
   const minWeight = 0.1;  
   const maxWeight = 1.5;
   const [currentWeight, setCurrentWeight] = useState(0.8);
+  const [goalText, setGoalText] = useState("Lose Weight");
+
+  // Load goal from storage and set the display text
+  const loadGoal = useCallback(async () => {
+    try {
+      const onboardingData = await getOnboardingData();
+      if (onboardingData?.goal) {
+        // Map the stored goal value to display text
+        const goal = onboardingData.goal.toLowerCase();
+        if (goal.includes("lose")) {
+          setGoalText("Lose Weight");
+        } else if (goal.includes("maintain")) {
+          setGoalText("Maintain Weight");
+        } else if (goal.includes("gain")) {
+          setGoalText("Gain Weight");
+        } else {
+          setGoalText("Lose Weight"); // default fallback
+        }
+      }
+    } catch (error) {
+      console.error("Error loading goal:", error);
+    }
+  }, []);
+
+  // Load goal when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadGoal();
+    }, [loadGoal])
+  );
 
   // 🔹 Static header progress (e.g. step 2 of 4)
 
@@ -55,7 +85,7 @@ export default function FastGoalScreen() {
 </View>
           {/* 🔹 Weight Info */}
           <View style={{ alignItems: "center", marginTop: 40 }}>
-            <Text style={styles.helperText}>Lose Weight speed per week</Text>
+            <Text style={styles.helperText}>{goalText} speed per week</Text>
             <Text style={styles.weightText}>{currentWeight.toFixed(1)} kg</Text>
           </View>
 
@@ -87,7 +117,25 @@ export default function FastGoalScreen() {
         <View style={styles.bottomContainer}>
           <TouchableOpacity
             style={styles.primaryCta}
-            onPress={() => router.push("/screens/losingwightscreen")}
+            onPress={async () => {
+              // Convert kg per week to lbs per week (1 kg = 2.20462 lbs)
+              const changeInWeightPerWeekLbs = Math.round(currentWeight * 2.20462 * 10) / 10; // Round to 1 decimal
+
+              // Save change in weight per week
+              try {
+                await saveOnboardingData({
+                  changeInWeightPerWeek: {
+                    kg: currentWeight,
+                    lbs: changeInWeightPerWeekLbs,
+                  },
+                });
+                console.log("✅ Saved change in weight per week:", currentWeight, "kg /", changeInWeightPerWeekLbs, "lbs");
+              } catch (error) {
+                console.error("Error saving change in weight per week:", error);
+              }
+
+              router.push("/screens/losingwightscreen");
+            }}
           >
             <Text style={styles.primaryCtaText}>Next</Text>
           </TouchableOpacity>

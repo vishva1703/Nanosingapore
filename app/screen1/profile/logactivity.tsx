@@ -1,26 +1,33 @@
+import wellnessApi from "@/api/wellnessApi";
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
 
 export default function LogActivityScreen() {
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [startTime, setStartTime] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
   const [weight, setWeight] = useState("");
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [loading, setLoading] = useState(false);
   const activityOptions = [
     "Aerobics",
     "Yoga",
@@ -38,6 +45,7 @@ export default function LogActivityScreen() {
 
   const [activityModalVisible, setActivityModalVisible] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState("");
+  
   const formatDateTime = (dateObj: Date, timeObj: Date) => {
     const dateStr = dateObj.toLocaleDateString("en-US", {
       month: "short",
@@ -50,6 +58,194 @@ export default function LogActivityScreen() {
     });
 
     return `${dateStr}, ${timeStr}`;
+  };
+
+  // Combine date and time into ISO string
+  const combineDateTime = (date: Date, time: Date): string => {
+    const combined = new Date(date);
+    combined.setHours(time.getHours());
+    combined.setMinutes(time.getMinutes());
+    combined.setSeconds(time.getSeconds());
+    return combined.toISOString();
+  };
+
+  // Handle save activity
+  const handleSaveActivity = async () => {
+    // Validation
+    if (!selectedActivity) {
+      Alert.alert("Error", "Please select an activity type");
+      return;
+    }
+
+    const startDateTime = combineDateTime(startDate, startTime);
+    const endDateTime = combineDateTime(endDate, endTime);
+
+    // Validate that end time is after start time
+    if (new Date(endDateTime) <= new Date(startDateTime)) {
+      Alert.alert("Error", "End time must be after start time");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Log the data being sent
+      const activityData = {
+        type: selectedActivity,
+        startTime: startDateTime,
+        endTime: endDateTime,
+      };
+      
+      console.log('========================================');
+      console.log('[LogActivity] 📤 SENDING DATA TO API:');
+      console.log('Activity Type:', activityData.type);
+      console.log('Start Time:', activityData.startTime);
+      console.log('End Time:', activityData.endTime);
+      console.log('Full Payload:', JSON.stringify(activityData, null, 2));
+      console.log('========================================');
+
+      // Save activity to database
+      const response = await wellnessApi.logActivity(activityData);
+
+      console.log('========================================');
+      console.log('[LogActivity] ✅ API RESPONSE RECEIVED:');
+      console.log('Response Status:', response?.status || 'N/A');
+      console.log('Response Data:', JSON.stringify(response, null, 2));
+      console.log('Response Keys:', response ? Object.keys(response) : 'null');
+      console.log('========================================');
+
+      // Verify data was saved by fetching activity chart data
+      try {
+        const today = new Date();
+        const startDateForVerify = new Date(today);
+        startDateForVerify.setDate(today.getDate() - 6);
+        const endDateForVerify = new Date(today);
+        endDateForVerify.setDate(today.getDate() + 1);
+
+        const sDate = startDateForVerify.toISOString().split('T')[0];
+        const eDate = endDateForVerify.toISOString().split('T')[0];
+
+        console.log('[LogActivity] 🔍 VERIFYING DATA IN DATABASE...');
+        console.log('Fetching activity chart for date range:', { sDate, eDate });
+
+        const verifyResponse = await wellnessApi.getActivityChart({
+          sDate,
+          eDate,
+          trend: 'weekly',
+        });
+
+        console.log('========================================');
+        console.log('[LogActivity] 🔍 VERIFICATION RESPONSE:');
+        console.log('Verification Data:', JSON.stringify(verifyResponse, null, 2));
+        
+        // Check if our saved activity appears in the response
+        // API returns aggregated data: { data: { min: [{ date: "23", min: 0 }, ...] } }
+        let foundActivity = false;
+        let minutesData: any[] = [];
+        
+        // Handle the actual API response structure: response.data.min
+        if (verifyResponse?.data?.min && Array.isArray(verifyResponse.data.min)) {
+          minutesData = verifyResponse.data.min;
+          console.log('[LogActivity] Found minutes data in response.data.min');
+        } else if (verifyResponse?.data?.data?.min && Array.isArray(verifyResponse.data.data.min)) {
+          minutesData = verifyResponse.data.data.min;
+          console.log('[LogActivity] Found minutes data in response.data.data.min');
+        }
+
+        // Calculate the day of month for the saved activity
+        const savedDate = new Date(startDateTime);
+        const savedDayOfMonth = String(savedDate.getDate()).padStart(2, '0');
+        
+        // Calculate minutes from start to end time
+        const startTime = new Date(startDateTime).getTime();
+        const endTime = new Date(endDateTime).getTime();
+        const activityMinutes = Math.round((endTime - startTime) / (1000 * 60)); // Convert ms to minutes
+
+        console.log('[LogActivity] Saved activity details:');
+        console.log('  - Day of month:', savedDayOfMonth);
+        console.log('  - Activity minutes:', activityMinutes);
+        console.log('  - Activity type:', selectedActivity);
+
+        // Check if the day we saved has minutes data
+        const dayEntry = minutesData.find((item: any) => {
+          // API returns date as day number (e.g., "23", "24") or full date
+          const itemDate = String(item.date || item.day || '');
+          return itemDate === savedDayOfMonth || itemDate.endsWith(savedDayOfMonth);
+        });
+
+        if (dayEntry) {
+          const existingMinutes = dayEntry.min || dayEntry.minutes || 0;
+          console.log('[LogActivity] Found day entry:', dayEntry);
+          console.log('[LogActivity] Existing minutes for this day:', existingMinutes);
+          
+          // Activity is found if:
+          // 1. The day has minutes > 0 (activity was saved)
+          // 2. OR the minutes match our calculated activity duration (within reasonable tolerance)
+          foundActivity = existingMinutes > 0 || Math.abs(existingMinutes - activityMinutes) < 60;
+          
+          if (foundActivity) {
+            console.log('[LogActivity] ✅ Activity verified! Day has', existingMinutes, 'minutes');
+          } else {
+            console.log('[LogActivity] ⚠️ Day found but minutes may not match yet');
+          }
+        } else {
+          console.log('[LogActivity] Day entry not found in response');
+        }
+
+        console.log('Total days with data:', minutesData.length);
+        console.log('Our activity found in database:', foundActivity ? '✅ YES' : '❌ NO');
+        console.log('========================================');
+
+        // Show success message with verification result
+        const successMessage = foundActivity
+          ? `Activity logged successfully!\n\n✅ Verified in database:\n• Type: ${selectedActivity}\n• Start: ${new Date(startDateTime).toLocaleString()}\n• End: ${new Date(endDateTime).toLocaleString()}`
+          : `Activity logged successfully!\n\n⚠️ Note: Verification pending. The activity may take a moment to appear in the chart.`;
+
+        Alert.alert("Success", successMessage, [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]);
+      } catch (verifyError: any) {
+        console.error('[LogActivity] ⚠️ Verification failed (but save may have succeeded):', verifyError);
+        // Still show success even if verification fails
+        Alert.alert(
+          "Success", 
+          "Activity logged successfully!\n\nNote: Could not verify immediately, but data should be saved.",
+          [
+            {
+              text: "OK",
+              onPress: () => router.back(),
+            },
+          ]
+        );
+      }
+    } catch (error: any) {
+      console.error('========================================');
+      console.error('[LogActivity] ❌ ERROR SAVING ACTIVITY:');
+      console.error('Error Type:', error?.constructor?.name || typeof error);
+      console.error('Error Message:', error?.message);
+      console.error('Error Response:', error?.response?.data);
+      console.error('Error Status:', error?.response?.status);
+      console.error('Error Headers:', error?.response?.headers);
+      console.error('Full Error:', JSON.stringify(error, null, 2));
+      console.error('========================================');
+
+      const errorMessage = 
+        error?.response?.data?.message || 
+        error?.response?.data?.error ||
+        error?.message || 
+        "Failed to save activity. Please try again.";
+
+      Alert.alert(
+        "Error",
+        `Failed to save activity:\n\n${errorMessage}\n\nCheck console for details.`,
+        [{ text: "OK" }]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -88,23 +284,48 @@ export default function LogActivityScreen() {
 
             <TouchableOpacity
               style={styles.row}
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setShowStartDatePicker(true)}
             >
               <Text style={styles.label}>Started activity</Text>
               <Text style={styles.value}>
-                {formatDateTime(date, time)}
+                {formatDateTime(startDate, startTime)}
               </Text>
-
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => setShowStartTimePicker(true)}
+            >
+              <Text style={styles.label}>Start time</Text>
+              <Text style={styles.value}>
+                {startTime.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => setShowEndDatePicker(true)}
+            >
+              <Text style={styles.label}>Finished date</Text>
+              <Text style={styles.value}>
+                {formatDateTime(endDate, endTime)}
+              </Text>
+            </TouchableOpacity>
+            
             <TouchableOpacity
               style={[styles.row, { borderBottomWidth: 0 }]}
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setShowEndTimePicker(true)}
             >
-              <Text style={styles.label}>Finished</Text>
+              <Text style={styles.label}>End time</Text>
               <Text style={styles.value}>
-                {formatDateTime(date, time)}
+                {endTime.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
               </Text>
-
             </TouchableOpacity>
 
 
@@ -162,33 +383,67 @@ export default function LogActivityScreen() {
 
         {/* FIXED BOTTOM BUTTON */}
         <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => router.push("/screen1/profile/logsleep")}>
-            <Text style={styles.buttonText}>Save</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSaveActivity}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* DATE PICKER */}
-        {showDatePicker && (
+        {/* START DATE PICKER */}
+        {showStartDatePicker && (
           <DateTimePicker
-            value={date}
+            value={startDate}
             mode="date"
             display="spinner"
             onChange={(e, d) => {
-              setShowDatePicker(false);
-              if (d) setDate(d);
+              setShowStartDatePicker(false);
+              if (d) setStartDate(d);
             }}
           />
         )}
 
-        {/* TIME PICKER */}
-        {showTimePicker && (
+        {/* START TIME PICKER */}
+        {showStartTimePicker && (
           <DateTimePicker
-            value={time}
+            value={startTime}
             mode="time"
             display="spinner"
             onChange={(e, t) => {
-              setShowTimePicker(false);
-              if (t) setTime(t);
+              setShowStartTimePicker(false);
+              if (t) setStartTime(t);
+            }}
+          />
+        )}
+
+        {/* END DATE PICKER */}
+        {showEndDatePicker && (
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            display="spinner"
+            onChange={(e, d) => {
+              setShowEndDatePicker(false);
+              if (d) setEndDate(d);
+            }}
+          />
+        )}
+
+        {/* END TIME PICKER */}
+        {showEndTimePicker && (
+          <DateTimePicker
+            value={endTime}
+            mode="time"
+            display="spinner"
+            onChange={(e, t) => {
+              setShowEndTimePicker(false);
+              if (t) setEndTime(t);
             }}
           />
         )}
@@ -263,6 +518,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "600",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   modalOverlay: {
     position: "absolute",

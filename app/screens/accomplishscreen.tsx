@@ -1,4 +1,5 @@
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
@@ -25,10 +26,6 @@ const DIET_OPTIONS: ReadonlyArray<{
     { value: 'feel_better', label: 'Feel better', type: 'mci', icon: 'meditation' },     // 🧘 meditation pose
   ];
   
-
-
-
-
 export default function AccomplishScreen() {
     const router = useRouter();
     const [selectedDiet, setSelectedDiet] = useState<string | null>(null);
@@ -118,7 +115,20 @@ export default function AccomplishScreen() {
                     <TouchableOpacity
                         style={[styles.primaryCta, !selectedDiet && { opacity: 0.6 }]}
                         disabled={!selectedDiet}
-                        onPress={() => router.push('/screens/potentialscreen')}
+                        onPress={async () => {
+                            // Save want to accomplish (optional)
+                            if (selectedDiet) {
+                                try {
+                                    await saveOnboardingData({
+                                        wantToAccomplish: selectedDiet,
+                                    });
+                                    console.log("✅ Saved want to accomplish:", selectedDiet);
+                                } catch (error) {
+                                    console.error("Error saving want to accomplish:", error);
+                                }
+                            }
+                            router.push('/screens/potentialscreen');
+                        }}
                     >
                         <Text style={styles.primaryCtaText}>Next</Text>
                     </TouchableOpacity>

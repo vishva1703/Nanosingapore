@@ -1,3 +1,5 @@
+// Add ProfileAPI import at the top
+import { ProfileAPI } from '@/api/profile';
 import { hp, RFValue, wp } from '@/utils/responsive';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,12 +11,13 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ITEM_HEIGHT = hp('6.25%'); // Responsive item height
+const ITEM_HEIGHT = hp('6.25%');
 const VISIBLE_ITEMS = 5;
-
 const MIN_WEIGHT_KG = 40;
 const MAX_WEIGHT_KG = 160;
 
@@ -24,7 +27,6 @@ const clamp = (value: number, min: number, max: number) =>
 export default function HeightWeightScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  // Initialize with current weight from params or default to 70
   const initialWeight = params.currentWeight 
     ? parseFloat(params.currentWeight as string) 
     : 70;
@@ -33,6 +35,7 @@ export default function HeightWeightScreen() {
       ? initialWeight
       : 70
   );
+  const [isSaving, setIsSaving] = useState(false); // Add loading state
 
   const weightOptions = useMemo(
     () => Array.from({ length: MAX_WEIGHT_KG - MIN_WEIGHT_KG + 1 }, (_, i) => MIN_WEIGHT_KG + i),
@@ -43,6 +46,44 @@ export default function HeightWeightScreen() {
     (kgValue: number) => setWeight(clamp(kgValue, MIN_WEIGHT_KG, MAX_WEIGHT_KG)),
     []
   );
+
+  // Function to save weight to server
+  const saveWeightToServer = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Convert kg to lbs for the API
+      const lbsValue = Math.round(weight * 2.20462);
+      
+      console.log('🔄 [HeightWeightScreen] Saving weight:', { kg: weight, lbs: lbsValue });
+      
+      const response = await ProfileAPI.setCurrentWeight({
+        kg: weight,
+        lbs: lbsValue
+      });
+      
+      console.log('✅ [HeightWeightScreen] Save response:', response);
+      
+      if (response.success || (response as any).flag === true) {
+        // Navigate back with the updated weight
+        router.push({
+          pathname: "/me",
+          params: { weight: weight.toString() },
+        });
+      } else {
+        const errorMsg = response.error || response.message || 'Failed to save weight';
+        Alert.alert('Error', errorMsg);
+      }
+    } catch (error) {
+      console.error('❌ [HeightWeightScreen] Error saving weight:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to save weight. Please try again.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const VerticalPicker = React.memo(function VerticalPicker({
     label,
@@ -59,6 +100,7 @@ export default function HeightWeightScreen() {
     displayFn: (item: number) => string;
     style?: any;
   }) {
+    // ... keep your existing VerticalPicker implementation ...
     const scrollY = useRef(new Animated.Value(0)).current;
     const listRef = useRef<FlatList>(null);
 
@@ -188,8 +230,6 @@ export default function HeightWeightScreen() {
           <Text style={styles.sectionLabel}>What is your current weight?</Text>
         </View>
 
-     
-
         <View style={styles.pickerContainer}>
           <VerticalPicker
             label="Weight"
@@ -202,15 +242,15 @@ export default function HeightWeightScreen() {
 
         <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={[styles.primaryCta, { opacity: 1 }]}
-            onPress={() => {
-              router.push({
-                pathname: "/me",
-                params: { weight: weight.toString() },
-              });
-            }}
+            style={[styles.primaryCta, isSaving && styles.primaryCtaDisabled]}
+            onPress={saveWeightToServer}
+            disabled={isSaving}
           >
-            <Text style={styles.primaryCtaText}>Done</Text>
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.primaryCtaText}>Done</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -236,16 +276,6 @@ const styles = StyleSheet.create({
   },
   titleContainer: { paddingHorizontal: wp('6%'), marginBottom: hp('2%') },
   sectionLabel: { fontSize: RFValue(26), fontWeight: '700', color: '#111827' },
-
-  unitIndicator: {
-    alignItems: 'center',
-    marginTop: hp('2.5%'),
-  },
-  unitText: {
-    fontSize: RFValue(16),
-    fontWeight: '600',
-    color: '#4B3AAC',
-  },
 
   pickerContainer: {
     flex: 1,
@@ -280,8 +310,8 @@ const styles = StyleSheet.create({
   selectedItemText: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: RFValue(14), 
-  },      
+    fontSize: RFValue(14),
+  },
 
   bottomContainer: { 
     position: 'absolute', 
@@ -298,6 +328,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: wp('2.5%'),
     shadowOffset: { width: 0, height: hp('0.5%') },
+  },
+  primaryCtaDisabled: {
+    opacity: 0.7,
   },
   primaryCtaText: { 
     color: '#FFFFFF', 

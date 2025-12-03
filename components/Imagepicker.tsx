@@ -1,10 +1,13 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import wellnessApi from '@/api/wellnessApi';
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
+    Image,
     SafeAreaView,
     StyleSheet,
     Text,
@@ -13,7 +16,6 @@ import {
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { Image } from 'react-native';
 
 const labelImage = require('../assets/images/Frame1.png');
 const barcodeImage = require('../assets/images/Frame1.png');
@@ -28,7 +30,13 @@ export default function Imagepicker() {
     const [activeMode, setActiveMode] = useState<CameraMode>('scan');
     const [scanned, setScanned] = useState(false);
     const [flash, setFlash] = useState<'off' | 'on'>('off');
+    const [loading, setLoading] = useState(false);
     const cameraRef = useRef<any>(null);
+
+    // Helper to get current date in ISO format
+    const getCurrentDate = (): string => {
+        return new Date().toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+    };
 
     useEffect(() => {
         if (!permission) {
@@ -44,39 +52,138 @@ export default function Imagepicker() {
         setFlash(current => current === 'off' ? 'on' : 'off');
     };
 
-    const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
+    const handleBarcodeScanned = async ({ type, data }: { type: string; data: string }) => {
+        if (scanned) return; // Prevent multiple scans
+        
         setScanned(true);
-        Alert.alert(
-            'Barcode Scanned',
-            `Type: ${type}\nData: ${data}`,
-            [
-                {
-                    text: 'OK',
-                    onPress: () => setScanned(false),
-                },
-            ]
-        );
+        setLoading(true);
+        
+        try {
+            const date = getCurrentDate();
+            console.log('[Imagepicker] Scanning barcode:', { barcode: data, date });
+            console.log('[Imagepicker] Calling scanBarcode API...');
+            
+            const response = await wellnessApi.scanBarcode({ 
+                barcode: data, 
+                date 
+            });
+            
+            console.log('[Imagepicker] Barcode scan API response:', response);
+            
+            // Handle different response formats
+            const scanData = response?.data || response?.result || response;
+            
+            // Navigate to FoodDetail with API response
+            router.push({
+                pathname: '/screen1/scanfood/FoodDetail',
+                params: {
+                    imageUri: '', // Barcode scan doesn't have image
+                    mode: 'barcode',
+                    scanData: JSON.stringify(scanData),
+                    barcode: data,
+                }
+            });
+        } catch (error: any) {
+            console.error('[Imagepicker] Error scanning barcode:', error);
+            console.error('[Imagepicker] Barcode error details:', {
+                message: error?.message,
+                response: error?.response?.data,
+                status: error?.response?.status,
+            });
+            Alert.alert(
+                'Scan Error',
+                error?.response?.data?.message || error?.message || 'Failed to scan barcode. Please try again.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            setScanned(false);
+                            setLoading(false);
+                        },
+                    },
+                ]
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const processImage = async (imageUri: string, mode: CameraMode) => {
+        try {
+            setLoading(true);
+            const date = getCurrentDate();
+            console.log(`[Imagepicker] Processing ${mode} image:`, { imageUri, date });
+            
+            let response;
+
+            // Call appropriate API based on mode
+            if (mode === 'scan') {
+                console.log('[Imagepicker] Calling scanFood API...');
+                response = await wellnessApi.scanFood({ fileUri: imageUri, date });
+            } else if (mode === 'label') {
+                console.log('[Imagepicker] Calling scanFoodLabel API...');
+                response = await wellnessApi.scanFoodLabel({ fileUri: imageUri, date });
+            } else {
+                // For gallery mode, use scan food API
+                console.log('[Imagepicker] Calling scanFood API for gallery...');
+                response = await wellnessApi.scanFood({ fileUri: imageUri, date });
+            }
+
+            console.log('[Imagepicker] API response received:', response);
+
+            // Handle different response formats
+            const scanData = response?.data || response?.result || response;
+
+            // Navigate to FoodDetail with API response
+            router.push({
+                pathname: '/screen1/scanfood/FoodDetail',
+                params: {
+                    imageUri: imageUri,
+                    mode: mode,
+                    scanData: JSON.stringify(scanData),
+                }
+            });
+        } catch (error: any) {
+            console.error(`[Imagepicker] Error processing ${mode} image:`, error);
+            console.error('[Imagepicker] Error details:', {
+                message: error?.message,
+                response: error?.response?.data,
+                status: error?.response?.status,
+            });
+            Alert.alert(
+                'Scan Error',
+                error?.response?.data?.message || error?.message || `Failed to process ${mode} image. Please try again.`,
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => setLoading(false),
+                    },
+                ]
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     const pickImageFromGallery = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            router.push({
-                pathname: '/screen1/scanfood/FoodDetail',
-                params: { 
-                    imageUri: result.assets[0].uri, 
-                    mode: activeMode,
-                    name: 'Chickpea curry',
-                    calories: '300',
-                    portion: '8 oz cooked',
-                }
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
             });
+
+            if (!result.canceled && result.assets[0]) {
+                // Process the selected image
+                await processImage(result.assets[0].uri, activeMode);
+            }
+        } catch (error: any) {
+            console.error('Error picking image:', error);
+            Alert.alert(
+                'Error',
+                'Failed to pick image from gallery. Please try again.'
+            );
         }
     };
 
@@ -84,27 +191,31 @@ export default function Imagepicker() {
         if (cameraRef.current) {
             try {
                 const photo = await cameraRef.current.takePictureAsync();
-                router.push({
-                    pathname: '/screen1/scanfood/FoodDetail',
-                    params: { 
-                        imageUri: photo.uri, 
-                        mode: activeMode,
-                        name: 'Chickpea curry',
-                        calories: '300',
-                        portion: '8 oz cooked',
-                    }
-                });
-            } catch (error) {
+                if (photo?.uri) {
+                    // Process the captured image
+                    await processImage(photo.uri, activeMode);
+                }
+            } catch (error: any) {
                 console.error('Error taking picture:', error);
+                Alert.alert(
+                    'Error',
+                    'Failed to capture picture. Please try again.'
+                );
+                setLoading(false);
             }
         }
     };
 
-    const handleModeSelect = (mode: CameraMode) => {
+    const handleModeSelect = async (mode: CameraMode) => {
+        // Reset scanned state when changing modes
+        if (mode !== 'barcode') {
+            setScanned(false);
+        }
+        
         setActiveMode(mode);
 
         if (mode === 'gallery') {
-            pickImageFromGallery();
+            await pickImageFromGallery();
         }
     };
 
@@ -168,6 +279,22 @@ export default function Imagepicker() {
                 <Text style={styles.headerTitle}>Food Database</Text>
                 <View style={styles.placeholder} />
             </View>
+
+            {/* Loading Overlay */}
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#4B3AAC" />
+                        <Text style={styles.loadingText}>
+                            {activeMode === 'barcode' 
+                                ? 'Scanning barcode...' 
+                                : activeMode === 'label'
+                                ? 'Processing label...'
+                                : 'Scanning food...'}
+                        </Text>
+                    </View>
+                </View>
+            )}
 
             {/* Camera Preview */}
             <View style={styles.cameraContainer}>
@@ -248,10 +375,15 @@ export default function Imagepicker() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={styles.captureButton}
+                                    style={[styles.captureButton, loading && styles.captureButtonDisabled]}
                                     onPress={takePicture}
+                                    disabled={loading}
                                 >
-                                    <View style={styles.captureButtonInner} />
+                                    {loading ? (
+                                        <ActivityIndicator size="small" color="#4B3AAC" />
+                                    ) : (
+                                        <View style={styles.captureButtonInner} />
+                                    )}
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -477,6 +609,34 @@ const styles = StyleSheet.create({
         width: wp('60%'),
         height: hp('45%'),  // tall rectangle
         resizeMode: 'contain',
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loadingContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+        minWidth: wp('60%'),
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: RFValue(14),
+        color: '#333',
+        fontWeight: '500',
+        textAlign: 'center',
+    },
+    captureButtonDisabled: {
+        opacity: 0.5,
     },
     
 });

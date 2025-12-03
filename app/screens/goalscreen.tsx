@@ -1,14 +1,15 @@
 import ProgressBar from '@/components/ProgressBar';
+import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { ComponentProps } from 'react';
 import React, { useState } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -84,7 +85,31 @@ export default function GoalScreen() {
           <TouchableOpacity
             style={[styles.primaryCta, !selectedFrequency && { opacity: 0.6 }]}
             disabled={!selectedFrequency}
-            onPress={() => router.push('/screens/desiredscreen')}
+            onPress={async () => {
+              // Map goal value to API format
+              let goal = "Lose weight"; // default
+              if (selectedFrequency === 'loseweight') {
+                goal = "Lose weight";
+              } else if (selectedFrequency === 'maintain') {
+                goal = "Maintain weight";
+              } else if (selectedFrequency === 'gainweight') {
+                goal = "Gain weight";
+              }
+
+              // Save goal data
+              if (selectedFrequency) {
+                try {
+                  await saveOnboardingData({
+                    goal: goal,
+                  });
+                  console.log("✅ Saved goal:", goal);
+                } catch (error) {
+                  console.error("Error saving goal:", error);
+                }
+              }
+
+              router.push('/screens/desiredscreen');
+            }}
           >
             <Text style={styles.primaryCtaText}>Next</Text>
           </TouchableOpacity>

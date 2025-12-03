@@ -23,6 +23,12 @@ interface FoodlistContentProps {
     value: number;
     icon: any;
   }>;
+  calories?: {
+    consumed?: number;
+    goal?: number;
+    remaining?: number;
+  };
+  loading?: boolean;
 }
 
 interface CircleProgressProps {
@@ -133,11 +139,27 @@ const CircleProgress: React.FC<CircleProgressProps> = ({
 
 const FoodlistContent: React.FC<FoodlistContentProps> = ({
   nutrients,
+  calories,
+  loading = false,
 }) => {
   const router = useRouter();
   const avg = (
     (nutrients[0].value + nutrients[1].value + nutrients[2].value) / 3
   ).toFixed(2);
+
+  // Maximum/total values for calculating progress (goal / total = progress)
+  const MAX_CALORIES = 3000;
+
+  const caloriesGoal = calories?.goal || 1200;
+  const caloriesRemaining = calories?.remaining !== undefined 
+    ? calories.remaining 
+    : caloriesGoal - (calories?.consumed || 0);
+  const caloriesConsumed = calories?.consumed || 0;
+
+  // Calculate progress for calories circle: goal / total maximum (like in planscreen)
+  const caloriesProgress = caloriesGoal > 0 && MAX_CALORIES > 0
+    ? Math.min(Math.max(caloriesGoal / MAX_CALORIES, 0), 1)
+    : 0;
 
   return (
     <View style={styles.contentContainer}>
@@ -147,13 +169,16 @@ const FoodlistContent: React.FC<FoodlistContentProps> = ({
           style={styles.caloriesCardContent}
           onPress={() => router.push("/screen1/Adjustgoal")}
           activeOpacity={0.7}
+          disabled={loading}
         >
-          <Text style={styles.goalText}>Daily goal: 1200</Text>
-          <Text style={styles.caloriesNumber}>900</Text>
+          <Text style={styles.goalText}>Daily goal: {caloriesGoal}</Text>
+          <Text style={styles.caloriesNumber}>
+            {loading ? '...' : caloriesRemaining}
+          </Text>
           <Text style={styles.caloriesLeft}>Calories left</Text>
         </TouchableOpacity>
         <CircleProgress
-          progress={Number(avg)}
+          progress={loading ? 0 : Number(caloriesProgress)}
           color="#4B3AAC"
           label=""
           sizeMultiplier={1.6}
