@@ -29,10 +29,10 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-nat
 interface FoodItem {
   id: string;
   name: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
+  calories?: number | { value: number; unit?: string };
+  protein?: number | { value: number; unit?: string };
+  carbs?: number | { value: number; unit?: string };
+  fat?: number | { value: number; unit?: string };
   servingSize?: string;
   [key: string]: any;
 }
@@ -87,9 +87,9 @@ const formatDate = (date: Date): string => {
 };
 
 const MAX_CALORIES = 3000;
-const MAX_CARBS = 400; 
-const MAX_PROTEIN = 250; 
-const MAX_FATS = 150; 
+const MAX_CARBS = 400;
+const MAX_PROTEIN = 250;
+const MAX_FATS = 150;
 
 const calculateProgress = (goal: number = 0, total: number = 1): number => {
   if (total <= 0 || goal <= 0) return 0;
@@ -100,23 +100,25 @@ const calculateProgress = (goal: number = 0, total: number = 1): number => {
 const calculateConsumptionProgress = (consumed: number = 0, goal: number = 1): number => {
   if (goal <= 0) return 0;
   const progress = consumed / goal;
-  return Math.min(Math.max(progress, 0), 1); 
+  return Math.min(Math.max(progress, 0), 1);
 };
 
 const mergeWithMacroData = (dashboard: DashboardData, macroData?: any): DashboardData => {
-  if (!macroData || !macroData.macroNutrient) {
-    console.log("🔄 No macro data to merge");
-    return dashboard;
-  }
-  
-  console.log("🔄 Merging with macro data:", macroData);
-
+  // Add null safety checks
   if (!dashboard) {
+    console.log("⚠️ Dashboard is null/undefined, creating default");
     dashboard = {
       calories: {},
       nutrients: {}
     };
   }
+
+  if (!macroData || !macroData.macroNutrient) {
+    console.log("🔄 No macro data to merge");
+    return dashboard;
+  }
+
+  console.log("🔄 Merging with macro data:", macroData);
 
   const { calories, protein, carbs, fats } = macroData.macroNutrient;
 
@@ -127,7 +129,7 @@ const mergeWithMacroData = (dashboard: DashboardData, macroData?: any): Dashboar
   }
 
   if (!dashboard.nutrients) dashboard.nutrients = {};
-  
+
   if (!dashboard.nutrients.protein) dashboard.nutrients.protein = {};
   if (protein?.goal || protein?.value) {
     dashboard.nutrients.protein.goal = dashboard.nutrients.protein.goal || protein.goal || protein.value;
@@ -210,9 +212,9 @@ export default function HomeScreen() {
   const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
   const [storedMacroData, setStoredMacroData] = useState<any>(null);
   const [foodList, setFoodList] = useState<FoodItem[]>([]);
-const [foodListLoading, setFoodListLoading] = useState(false);
-const [foodListPage, setFoodListPage] = useState(1);
-const [hasMoreFoods, setHasMoreFoods] = useState(true);
+  const [foodListLoading, setFoodListLoading] = useState(false);
+  const [foodListPage, setFoodListPage] = useState(1);
+  const [hasMoreFoods, setHasMoreFoods] = useState(true);
   const { activities, isAnalyzing, addActivity } = useActivity();
   const { myFoods, removeFood, addFood } = useFood();
   const [swipedIndex, setSwipedIndex] = useState<number | null>(null);
@@ -221,53 +223,53 @@ const [hasMoreFoods, setHasMoreFoods] = useState(true);
   const slideAnim = React.useRef(new Animated.Value(0)).current;
   const rotateAnim = React.useRef(new Animated.Value(0)).current;
 
- // In your component
-const fetchFoodList = useCallback(async (page: number = 1, isRefresh: boolean = false) => {
-  try {
-    setFoodListLoading(true);
-    
-    const response = await wellnessApi.getFoodList({
-      page,
-      limit: 20,
-      search: "" // You can add search functionality later
-    });
+  // In your component
+  const fetchFoodList = useCallback(async (page: number = 1, isRefresh: boolean = false) => {
+    try {
+      setFoodListLoading(true);
 
-    console.log('Food list API response:', response);
-    
-    // Now response should be the array of food items directly
-    const foods = Array.isArray(response) ? response : [];
-    
-    if (isRefresh || page === 1) {
-      setFoodList(foods);
-    } else {
-      setFoodList(prev => [...prev, ...foods]);
+      const response = await wellnessApi.getFoodList({
+        page,
+        limit: 20,
+        search: "" // You can add search functionality later
+      });
+
+      console.log('Food list API response:', response);
+
+      // Now response should be the array of food items directly
+      const foods = Array.isArray(response) ? response : [];
+
+      if (isRefresh || page === 1) {
+        setFoodList(foods);
+      } else {
+        setFoodList(prev => [...prev, ...foods]);
+      }
+
+      // Check if there are more items to load
+      // Since your API returns empty array when no data, we can check length
+      if (foods.length < 20) {
+        setHasMoreFoods(false);
+      } else {
+        setHasMoreFoods(true);
+      }
+    } catch (error: any) {
+      console.error('Error fetching food list:', error);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || error?.message || 'Failed to load food list'
+      );
+    } finally {
+      setFoodListLoading(false);
     }
-    
-    // Check if there are more items to load
-    // Since your API returns empty array when no data, we can check length
-    if (foods.length < 20) {
-      setHasMoreFoods(false);
-    } else {
-      setHasMoreFoods(true);
-    }
-  } catch (error: any) {
-    console.error('Error fetching food list:', error);
-    Alert.alert(
-      'Error',
-      error?.response?.data?.message || error?.message || 'Failed to load food list'
-    );
-  } finally {
-    setFoodListLoading(false);
-  }
-}, []);
+  }, []);
 
   // Add this useEffect to load food list
-React.useEffect(() => {
-  if (hasMounted.current) {
-    console.log('=== FETCHING FOOD LIST ===');
-    fetchFoodList(1, true);
-  }
-}, [fetchFoodList]);
+  React.useEffect(() => {
+    if (hasMounted.current) {
+      console.log('=== FETCHING FOOD LIST ===');
+      fetchFoodList(1, true);
+    }
+  }, [fetchFoodList]);
 
   const fetchDashboardData = useCallback(async (date: Date, showLoading: boolean = true) => {
     try {
@@ -276,10 +278,10 @@ React.useEffect(() => {
         setRefreshing(true);
       }
       const dateString = formatDate(date);
-      
+
       console.log('=== FETCHING DASHBOARD DATA ===');
       console.log('Date:', dateString);
-      
+
       const [dashboardResponse, recentLogsResponse] = await Promise.all([
         wellnessApi.getDashboard(dateString),
         wellnessApi.getRecentLogs({ page: 1, limit: 20, date: dateString })
@@ -289,45 +291,67 @@ React.useEffect(() => {
       console.log('Recent Logs Response:', recentLogsResponse);
 
       const dashboard = dashboardResponse?.data || dashboardResponse?.result || dashboardResponse;
-      
+
       const macroData = await getMacroData();
       console.log("📦 Fresh macro data from storage:", JSON.stringify(macroData, null, 2));
-      
+
       if (macroData) {
         setStoredMacroData(macroData);
       }
-      
-if (dashboard) {
-  console.log('📋 Original dashboard data:', dashboard);
-  
-  // Merge with stored macro data to get calculated goals
-  const mergedDashboard = mergeWithMacroData(dashboard, macroData);
-  setDashboardData(mergedDashboard);
-  
-  console.log('✅ Final merged dashboard:', mergedDashboard);
-  console.log('  - Calories goal:', mergedDashboard.calories?.goal);
-  console.log('  - Protein goal:', mergedDashboard.nutrients?.protein?.goal);
-  console.log('  - Carbs goal:', mergedDashboard.nutrients?.carbs?.goal);
-  console.log('  - Fat goal:', mergedDashboard.nutrients?.fat?.goal);
-} else {
-  console.warn('⚠️ No dashboard data found in response');
-  if (macroData) {
-    const macroBasedDashboard = createDashboardFromMacroData(macroData);
-    if (macroBasedDashboard) {
-      setDashboardData(macroBasedDashboard);
-      console.log('✅ Created dashboard from stored macro data:', macroBasedDashboard);
-    }
-  } else {
-    setDashboardData({
-      calories: { consumed: 0, goal: 2000, remaining: 2000 },
-      nutrients: {
-        protein: { consumed: 0, goal: 150, remaining: 150 },
-        carbs: { consumed: 0, goal: 200, remaining: 200 },
-        fat: { consumed: 0, goal: 65, remaining: 65 },
+
+      if (dashboard) {
+        console.log('📋 Original dashboard data:', dashboard);
+
+        // Safely handle dashboard data - check for null/undefined before accessing nested properties
+        try {
+          // Merge with stored macro data to get calculated goals
+          const mergedDashboard = mergeWithMacroData(dashboard, macroData);
+          setDashboardData(mergedDashboard);
+
+          console.log('✅ Final merged dashboard:', mergedDashboard);
+          console.log('  - Calories goal:', mergedDashboard?.calories?.goal);
+          console.log('  - Protein goal:', mergedDashboard?.nutrients?.protein?.goal);
+          console.log('  - Carbs goal:', mergedDashboard?.nutrients?.carbs?.goal);
+          console.log('  - Fat goal:', mergedDashboard?.nutrients?.fat?.goal);
+        } catch (mergeError: any) {
+          console.error('❌ Error merging dashboard data:', mergeError);
+          console.error('❌ Dashboard structure:', JSON.stringify(dashboard, null, 2));
+          // Set dashboard with safe defaults
+          if (macroData) {
+            const macroBasedDashboard = createDashboardFromMacroData(macroData);
+            if (macroBasedDashboard) {
+              setDashboardData(macroBasedDashboard);
+            }
+          } else {
+            setDashboardData({
+              calories: { consumed: 0, goal: 2000, remaining: 2000 },
+              nutrients: {
+                protein: { consumed: 0, goal: 150, remaining: 150 },
+                carbs: { consumed: 0, goal: 200, remaining: 200 },
+                fat: { consumed: 0, goal: 65, remaining: 65 },
+              }
+            });
+          }
+        }
+      } else {
+        console.warn('⚠️ No dashboard data found in response');
+        if (macroData) {
+          const macroBasedDashboard = createDashboardFromMacroData(macroData);
+          if (macroBasedDashboard) {
+            setDashboardData(macroBasedDashboard);
+            console.log('✅ Created dashboard from stored macro data:', macroBasedDashboard);
+          }
+        } else {
+          setDashboardData({
+            calories: { consumed: 0, goal: 2000, remaining: 2000 },
+            nutrients: {
+              protein: { consumed: 0, goal: 150, remaining: 150 },
+              carbs: { consumed: 0, goal: 200, remaining: 200 },
+              fat: { consumed: 0, goal: 65, remaining: 65 },
+            }
+          });
+        }
       }
-    });
-  }
-}
       // Handle different response structures for recent logs
       let logs = [];
       if (recentLogsResponse?.data?.list) {
@@ -349,17 +373,17 @@ if (dashboard) {
         logs = [];
         console.warn('⚠️ [Dashboard] Invalid logs format from API:', recentLogsResponse);
       }
-      
+
       if (Array.isArray(logs)) {
         setRecentLogs(logs);
         console.log('✅ [Dashboard] Recent logs set:', logs.length, 'items');
         console.log('📋 [Dashboard] Recent logs sample:', logs.length > 0 ? JSON.stringify(logs[0], null, 2) : 'No logs');
-        
+
         // Log exercise types found
-        const exerciseLogs = logs.filter((log: any) => 
-          log.type === 'activity' || 
-          log.type === 'exercise' || 
-          log.type === 'Run' || 
+        const exerciseLogs = logs.filter((log: any) =>
+          log.type === 'activity' ||
+          log.type === 'exercise' ||
+          log.type === 'Run' ||
           log.type === 'run' ||
           log.type === 'WeightLifting' ||
           log.type === 'weightlifting' ||
@@ -379,7 +403,7 @@ if (dashboard) {
       console.error('❌ Error fetching dashboard data:', error);
       console.error('Error response:', error?.response?.data);
       console.error('Error message:', error?.message);
-            if (showLoading && !dashboardData) {
+      if (showLoading && !dashboardData) {
         Alert.alert(
           'Error',
           error?.response?.data?.message || error?.message || 'Failed to load dashboard data. Please try again.'
@@ -394,29 +418,29 @@ if (dashboard) {
   }, []);
 
   const hasMounted = React.useRef(false);
-  
+
   React.useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
       console.log('=== INITIAL MOUNT - FETCHING DASHBOARD DATA ===');
       fetchDashboardData(selectedDate, true);
     }
-  }, []); 
-    useFocusEffect(
+  }, []);
+  useFocusEffect(
     useCallback(() => {
       if (!hasMounted.current) {
         return;
       }
-      
+
       console.log("🔄 [Dashboard] Screen focused - refreshing dashboard data");
       console.log("🔄 [Dashboard] Selected date:", formatDate(selectedDate));
       console.log("🔄 [Dashboard] Refresh param:", params.refresh);
-      
+
       // Refresh dashboard data when screen comes into focus
       // This ensures data is fresh after logging exercises, foods, etc.
       // Add a small delay if refresh param is present (coming from exercise log)
       const refreshDelay = params.refresh ? 1000 : 0;
-      
+
       setTimeout(() => {
         fetchDashboardData(selectedDate, false);
       }, refreshDelay);
@@ -426,17 +450,17 @@ if (dashboard) {
   const handleAddFoodToLog = async (foodItem: FoodItem) => {
     try {
       const dateString = formatDate(selectedDate);
-      
+
       const response = await wellnessApi.logFoodFromSearch({
         foodId: foodItem.id,
         date: dateString
       });
-      
+
       console.log('Food added to log:', response);
-      
+
       // Refresh dashboard to show updated data
       await fetchDashboardData(selectedDate, false);
-      
+
       Alert.alert('Success', `${foodItem.name} added to your daily log!`);
     } catch (error: any) {
       console.error('Error adding food to log:', error);
@@ -458,7 +482,7 @@ if (dashboard) {
       if (logId) {
         await wellnessApi.deleteFood(logId);
       }
-      
+
       await fetchDashboardData(selectedDate);
     } catch (error: any) {
       console.error('Error deleting food:', error);
@@ -474,13 +498,13 @@ if (dashboard) {
     const protein = dashboardData?.nutrients?.protein || {};
     const carbs = dashboardData?.nutrients?.carbs || {};
     const fat = dashboardData?.nutrients?.fat || {};
-  
+
     const proteinGoal = protein.goal || 150;
     const carbsGoal = carbs.goal || 200;
     const fatGoal = fat.goal || 65;
-  
+
     console.log("📈 Nutrients1 - Protein:", proteinGoal, "Carbs:", carbsGoal, "Fat:", fatGoal);
-  
+
     return [
       {
         label: "Protein",
@@ -505,18 +529,18 @@ if (dashboard) {
       },
     ];
   }, [dashboardData]);
-  
+
   const nutrients = React.useMemo(() => {
     const protein = dashboardData?.nutrients?.protein || {};
     const carbs = dashboardData?.nutrients?.carbs || {};
     const fat = dashboardData?.nutrients?.fat || {};
-  
+
     const proteinGoal = protein.goal || 150;
     const carbsGoal = carbs.goal || 200;
     const fatGoal = fat.goal || 65;
-  
+
     console.log("📈 Nutrients - Protein:", proteinGoal, "Carbs:", carbsGoal, "Fat:", fatGoal);
-  
+
     return [
       {
         label: "Protein",
@@ -543,13 +567,13 @@ if (dashboard) {
   }, [dashboardData]);
   const caloriesData = React.useMemo(() => {
     const calories = dashboardData?.calories || {};
-    
+
     const caloriesGoal = calories.goal || 2000;
     const caloriesConsumed = calories.consumed || 0;
     const caloriesRemaining = caloriesGoal - caloriesConsumed;
-  
+
     console.log("🔥 Calories data - Goal:", caloriesGoal, "Consumed:", caloriesConsumed, "Remaining:", caloriesRemaining);
-  
+
     return {
       consumed: caloriesConsumed,
       goal: caloriesGoal,
@@ -568,24 +592,24 @@ if (dashboard) {
         calories: log.calories?.toString() || '0',
         cookedType: log.cookedType || '',
         logId: log.logId || log.id,
-        fromApi: true, 
+        fromApi: true,
         ...log
       }));
-    
-      const contextFoods = myFoods
-      .filter(f => f.id) 
+
+    const contextFoods = myFoods
+      .filter(f => f.id)
       .map(f => ({
         ...f,
-          fromContext: true, 
-        logId: f.id, 
+        fromContext: true,
+        logId: f.id,
       }));
-    
+
     const apiFoodIds = new Set(apiFoods.map(f => f.logId || f.id));
     const uniqueContextFoods = contextFoods.filter(f => {
       const foodId = f.logId || f.id;
       return foodId && !apiFoodIds.has(foodId);
     });
-    
+
     return [...apiFoods, ...uniqueContextFoods];
   }, [recentLogs, myFoods]);
 
@@ -594,27 +618,38 @@ if (dashboard) {
     const apiActivities = recentLogs
       .filter((log: RecentLog) => {
         const logType = (log.type || '').toLowerCase();
+        
+        // Explicitly exclude food items
+        if (logType === 'food' || logType === 'scan-food' || logType === 'scan_food' || logType === 'scanfood') {
+          return false;
+        }
+        
+        // Check if it's already identified as food (from allFoods)
+        if (log.type === 'food' || (!log.type && log.name && !log.duration && !log.intensity)) {
+          return false;
+        }
+        
         // Check for explicit exercise types
-        const isExerciseType = logType === 'activity' || 
-                              logType === 'exercise' || 
-                              logType === 'run' || 
-                              logType === 'weightlifting' ||
-                              logType === 'weight_lifting' ||
-                              logType === 'weight-lifting';
-        
+        const isExerciseType = logType === 'activity' ||
+          logType === 'exercise' ||
+          logType === 'run' ||
+          logType === 'weightlifting' ||
+          logType === 'weight_lifting' ||
+          logType === 'weight-lifting';
+
         // Check for exercise indicators (duration + intensity suggests exercise)
-        const hasExerciseFields = (log.duration !== undefined && log.duration !== null) ||
-                                 (log.intensity !== undefined && log.intensity !== null);
-        
-        // Check for exercise name patterns
-        const hasExerciseName = log.name && (
-          log.name.toLowerCase().includes('run') ||
-          log.name.toLowerCase().includes('weight') ||
-          log.name.toLowerCase().includes('exercise') ||
-          log.name.toLowerCase().includes('activity')
+        // Only consider it an exercise if it has BOTH duration AND intensity, or explicit exercise type
+        const hasExerciseFields = (log.duration !== undefined && log.duration !== null) &&
+          (log.intensity !== undefined && log.intensity !== null);
+
+        // Check for exercise name patterns (but exclude food-related names)
+        const logName = (log.name || '').toLowerCase();
+        const hasExerciseName = logName && (
+          (logName.includes('run') || logName.includes('weight') || logName.includes('exercise') || logName.includes('activity')) &&
+          !logName.includes('food') && !logName.includes('scan-food') && !logName.includes('scan_food')
         );
-        
-        return isExerciseType || (hasExerciseFields && !log.name) || hasExerciseName;
+
+        return isExerciseType || (hasExerciseFields && !logName.includes('food')) || hasExerciseName;
       })
       .map((log: RecentLog) => {
         // Map the type to a display-friendly name
@@ -624,7 +659,7 @@ if (dashboard) {
         } else if (displayType.toLowerCase().includes('weight')) {
           displayType = 'WeightLifting';
         }
-        
+
         // Helper function to safely extract numeric value (handles objects with value property)
         const getNumericValue = (val: any): number => {
           if (val === null || val === undefined) return 0;
@@ -638,7 +673,7 @@ if (dashboard) {
           }
           return 0;
         };
-        
+
         return {
           id: log.logId || log.id || `api-activity-${Date.now()}-${Math.random()}`,
           type: displayType,
@@ -652,20 +687,20 @@ if (dashboard) {
           logId: log.logId || log.id,
         };
       });
-    
+
     console.log('🏃 [Dashboard] API Activities found:', apiActivities.length);
     if (apiActivities.length > 0) {
       console.log('🏃 [Dashboard] API Activities:', JSON.stringify(apiActivities.slice(0, 2), null, 2));
     }
-    
+
     const contextActivities = activities
-      .filter(a => a.id) 
+      .filter(a => a.id)
       .map(a => ({
         ...a,
-        fromContext: true, 
-        logId: a.id, 
+        fromContext: true,
+        logId: a.id,
       }));
-    
+
     const apiActivityIds = new Set(apiActivities.map(a => a.logId || a.id));
     const uniqueContextActivities = contextActivities.filter(a => {
       const activityId = a.logId || a.id;
@@ -833,7 +868,7 @@ if (dashboard) {
           nestedScrollEnabled={true}
         >
           <View style={styles.page}>
-            <FoodlistContent 
+            <FoodlistContent
               nutrients={nutrients1}
               calories={caloriesData}
               loading={loading}
@@ -949,7 +984,7 @@ if (dashboard) {
 
         {allFoods.length > 0 && (
           <View style={styles.foodListSection}>
-            <Text style={styles.foodListSectionTitle}>My Foods</Text>
+            <Text style={styles.foodListSectionTitle}>Recently Logged Food</Text>
             {allFoods.map((item: any, index: number) => {
               if (!swipeAnimations.current[index]) {
                 swipeAnimations.current[index] = new Animated.Value(0);
@@ -976,7 +1011,7 @@ if (dashboard) {
                 },
                 onPanResponderRelease: (_, gestureState) => {
                   const swipeThreshold = -80;
-                  if (gestureState.dx < swipeThreshold) {     
+                  if (gestureState.dx < swipeThreshold) {
                     Animated.spring(swipeAnimations.current[index], {
                       toValue: -80,
                       useNativeDriver: true,
@@ -1055,14 +1090,26 @@ if (dashboard) {
                       activeOpacity={0.7}
                     >
                       <View style={styles.foodCardContent}>
-                        <Text style={styles.foodCardName}>{item.name}</Text>
-                        <View style={styles.foodCardRow}>
-                          <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
-                          <Text style={styles.foodCardSubtitle}>
-                            {item.calories} cal-oz, {item.cookedType}
-                          </Text>
+
+                        {/* Product Image */}
+                        <Image
+                          source={{ uri: item.imageUri}}  
+                          style={styles.foodCardImage}
+                        />
+
+                        <View style={styles.foodCardTextWrapper}>
+                          <Text style={styles.foodCardName}>{item.name}</Text>
+
+                          <View style={styles.foodCardRow}>
+                            <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
+                            <Text style={styles.foodCardSubtitle}>
+                              {item.calories} cal-oz, {item.cookedType}
+                            </Text>
+                          </View>
                         </View>
+
                       </View>
+
                       <TouchableOpacity
                         style={styles.foodCardPlusButton}
                         onPress={(e) => {
@@ -1089,86 +1136,7 @@ if (dashboard) {
           </View>
         )}
 
-        {/* Add this section after your existing "My Foods" section */}
-{foodList.length > 0 && (
-  <View style={styles.foodListSection}>
-    <Text style={styles.foodListSectionTitle}>My Food Database</Text>
-    {foodList.map((item: FoodItem, index: number) => (
-      <TouchableOpacity
-        key={`api-food-${item.id}-${index}`}
-        style={styles.foodCard}
-        onPress={() => {
-          // Navigate to food detail screen
-          router.push({
-            pathname: "/screen1/fooddatabase/SelectedFood",
-            params: {
-              id: item.id,
-              name: item.name,
-              calories: item.calories?.toString() || '0',
-              protein: item.protein?.toString() || '0',
-              carbs: item.carbs?.toString() || '0',
-              fat: item.fat?.toString() || '0',
-              servingSize: item.servingSize || '',
-              fromApi: 'true'
-            }
-          });
-        }}
-      >
-        <View style={styles.foodCardContent}>
-          <Text style={styles.foodCardName}>{item.name}</Text>
-          <View style={styles.foodCardRow}>
-            <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
-            <Text style={styles.foodCardSubtitle}>
-              {item.calories || 0} calories
-              {item.servingSize && ` • ${item.servingSize}`}
-            </Text>
-          </View>
-          {/* Nutrition info */}
-          {(item.protein || item.carbs || item.fat) && (
-            <View style={styles.nutritionRow}>
-              <Text style={styles.nutritionText}>
-                P: {item.protein || 0}g
-              </Text>
-              <Text style={styles.nutritionText}>
-                C: {item.carbs || 0}g
-              </Text>
-              <Text style={styles.nutritionText}>
-                F: {item.fat || 0}g
-              </Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          style={styles.foodCardPlusButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            // Add to daily log
-            handleAddFoodToLog(item);
-          }}
-        >
-          <Text style={styles.foodCardPlusText}>+</Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    ))}
-    
-    {/* Load more button */}
-    {hasMoreFoods && (
-      <TouchableOpacity
-        style={styles.loadMoreButton}
-        onPress={() => {
-          const nextPage = foodListPage + 1;
-          setFoodListPage(nextPage);
-          fetchFoodList(nextPage, false);
-        }}
-        disabled={foodListLoading}
-      >
-        <Text style={styles.loadMoreText}>
-          {foodListLoading ? 'Loading...' : 'Load More'}
-        </Text>
-      </TouchableOpacity>
-    )}
-  </View>
-)}
+
 
         {allActivities.length === 0 && allFoods.length === 0 && !loading && (
           <View style={styles.foodListContainer}>
@@ -1292,7 +1260,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 5,
-    zIndex: 110, 
+    zIndex: 110,
   },
   overlay: {
     position: "absolute",
@@ -1301,7 +1269,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-        zIndex: 100, 
+    zIndex: 100,
   },
   overlayTouchable: {
     flex: 1,
@@ -1313,7 +1281,7 @@ const styles = StyleSheet.create({
     borderRadius: wp("6%"),
     padding: wp("5%"),
     width: wp("90%"),
-    
+
 
   },
   actionRow: {
@@ -1513,19 +1481,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
-    zIndex: 2, 
+    zIndex: 2,
   },
 
-  foodCardContent: {
-    flex: 1,
-    marginRight: wp("2%"),
-  },
+  // foodCardContent: {
+  //   flex: 1,
+  //   marginRight: wp("2%"),
+  // },
 
   foodCardName: {
     fontSize: RFValue(15),
     fontWeight: "700",
     color: "#111",
     marginBottom: hp("0.5%"),
+    flexShrink: 1,
   },
 
   foodCardRow: {
@@ -1547,6 +1516,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEF0FF",
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
   },
 
   foodCardPlusText: {
@@ -1558,7 +1528,7 @@ const styles = StyleSheet.create({
     position: "relative",
     marginBottom: hp("1%"),
     borderRadius: wp("4%"),
-    overflow: "hidden", 
+    overflow: "hidden",
   },
 
   deleteButtonContainer: {
@@ -1569,7 +1539,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 80,
-    backgroundColor: "#4B3AAC", 
+    backgroundColor: "#4B3AAC",
     zIndex: 1,
   },
 
@@ -1583,10 +1553,10 @@ const styles = StyleSheet.create({
   },
 
   foodCardTouchable: {
-    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -1621,5 +1591,27 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: '600',
   },
-
+  foodCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    minWidth: 0,
+    marginRight: wp("3%"),
+  },
+  
+  foodCardTextWrapper: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 10,
+  },
+  
+  foodCardImage: {
+    width: 50,
+    height: 50,
+    resizeMode: "cover",
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    flexShrink: 0,
+  },
+  
 });

@@ -1,10 +1,10 @@
 import wellnessApi from '@/api/wellnessApi';
 import ProgressBar from '@/components/ProgressBar';
-import { saveOnboardingData } from '@/utils/onboardingStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+    Alert,
     Animated,
     FlatList,
     StyleSheet,
@@ -287,21 +287,29 @@ export default function BirthDateScreen() {
                         <TouchableOpacity
                             style={[styles.primaryCta, { opacity: 1 }]}
                             onPress={async () => {
-                                // Create ISO date string from selected date
-                                const dateOfBirth = new Date(year, month, day).toISOString();
-                                
-                                // Save date of birth
                                 try {
-                                    await saveOnboardingData({
-                                        dateOfBirth: dateOfBirth,
+                                  const formattedDate = new Date(year, month, day).toISOString();
+                              
+                                  // ⭐ Call 2 APIs ONLY when NOT from settings
+                                  if (!isFromSettings) {
+                                    await wellnessApi.saveOnboardingQuiz({
+                                      dateOfBirth: formattedDate,
                                     });
-                                    console.log("✅ Saved date of birth:", dateOfBirth);
+                              
+                              
+                                    router.push("/screens/goalscreen"); // or next onboarding screen
+                                  } 
+                                  // ⭐ If from settings → only update profile value
+                                  else {
+                                    await wellnessApi.setDateOfBirth(formattedDate);
+                                    router.back();
+                                  }
+                              
                                 } catch (error) {
-                                    console.error("Error saving date of birth:", error);
+                                  console.log("❌ Error updating date of birth:", (error as any).response?.data || error);
                                 }
-
-                                router.replace('/screens/goalscreen');
-                            }}
+                              }}
+                              
                         >
                             <Text style={styles.primaryCtaText}>Next</Text>
                         </TouchableOpacity>
@@ -314,11 +322,32 @@ export default function BirthDateScreen() {
                                 try {
                                   const formattedDate = new Date(year, month, day).toISOString();
                               
+                                  console.log("📤 [BirthDate] Saving date of birth to backend...");
+                              
+                                  // 1️⃣ Save to onboarding quiz (ensures basicInfo is complete)
+                                  await wellnessApi.saveOnboardingQuiz({
+                                    dateOfBirth: formattedDate,
+                                  });
+                              
+                                  console.log("✅ [BirthDate] Saved to onboarding quiz");
+                              
+                                  // 2️⃣ Save to settings (normal profile)
                                   await wellnessApi.setDateOfBirth(formattedDate);
                               
+                                  console.log("✅ [BirthDate] Saved to profile settings");
+                                  console.log("✅ [BirthDate] Profile updated successfully!");
+                              
                                   router.back();
-                                } catch (error) {
-                                  console.log("Error updating date of birth:", error);
+                                } catch (error: any) {
+                                  console.error("❌ [BirthDate] Error updating date of birth:", error);
+                                  console.error("❌ [BirthDate] Error response:", error?.response?.data);
+                                  
+                                  // Show user-friendly error message
+                                  const errorMessage = error?.response?.data?.message || 
+                                                     error?.message || 
+                                                     "Failed to update date of birth. Please try again.";
+                                  
+                                  Alert.alert("Error", errorMessage);
                                 }
                               }}
                                                 >

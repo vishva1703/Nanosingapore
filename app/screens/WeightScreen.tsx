@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   Animated,
   FlatList,
   StyleSheet,
@@ -441,9 +442,27 @@ export default function HeightWeightScreen() {
                 try {
                   const heightCm = unit === 'metric' ? height : imperialToCm(heightFt, heightIn);
                   const weightKg = unit === 'metric' ? weight : lbToKg(weight);
-
                   const weightLbs = unit === 'imperial' ? weight : kgToLb(weight);
-
+              
+                  console.log("📤 [WeightScreen] Saving height and weight to backend...");
+                  
+                  // 1️⃣ Save to onboarding quiz (ensures basicInfo is complete)
+                  await wellnessApi.saveOnboardingQuiz({
+                    height: {
+                      cm: heightCm,
+                      feet: heightFt,
+                      inches: heightIn,
+                    },
+                    weight: {
+                      kg: weightKg,
+                      lbs: weightLbs,
+                    },
+                    unitSystem: unit === "metric" ? "Metric" : "Imperial"
+                  });
+              
+                  console.log("✅ [WeightScreen] Saved to onboarding quiz");
+                  
+                  // 2️⃣ Save to settings (normal profile)
                   await wellnessApi.setHeightWeight(
                     heightCm,
                     heightFt,
@@ -451,13 +470,24 @@ export default function HeightWeightScreen() {
                     weightKg,
                     weightLbs
                   );
-
-
+              
+                  console.log("✅ [WeightScreen] Saved to profile settings");
+                  console.log("✅ [WeightScreen] Profile updated successfully!");
+                  
                   router.back();
-                } catch (error) {
-                  console.log("Error updating height and weight:", error);
+                } catch (error: any) {
+                  console.error("❌ [WeightScreen] Error updating height and weight:", error);
+                  console.error("❌ [WeightScreen] Error response:", error?.response?.data);
+                  
+                  // Show user-friendly error message
+                  const errorMessage = error?.response?.data?.message || 
+                                     error?.message || 
+                                     "Failed to update height and weight. Please try again.";
+                  
+                  Alert.alert("Error", errorMessage);
                 }
               }}
+              
             >
               <Text style={styles.primaryCtaText}>Save</Text>
             </TouchableOpacity>

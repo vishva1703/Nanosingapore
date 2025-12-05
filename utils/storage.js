@@ -35,4 +35,60 @@ export const Storage = {
             return false;
         }
     },
+    saveOnboardingData: async (values) => {
+        try {
+          const existing = await AsyncStorage.getItem(StorageKeys.ONBOARDING);
+          const merged = existing ? { ...JSON.parse(existing), ...values } : values;
+          await AsyncStorage.setItem(StorageKeys.ONBOARDING, JSON.stringify(merged));
+        } catch (e) {
+          console.log("Error saving onboarding", e);
+        }
+      },
+    
+      getOnboardingData: async () => {
+        try {
+          const data = await AsyncStorage.getItem(StorageKeys.ONBOARDING);
+          return data ? JSON.parse(data) : null;
+        } catch (e) {
+          console.log("Error getting onboarding", e);
+          return null;
+        }
+      },
+    
+      clearOnboarding: async () => {
+        try {
+          await AsyncStorage.removeItem(StorageKeys.ONBOARDING);
+        } catch (e) {
+          console.log("Error clearing onboarding", e);
+        }
+      },
+    
+      // ---------------------------
+      // FOOD LIST STORAGE
+      // ---------------------------
+      saveMyFoods: async (foods) => {
+        try {
+          await AsyncStorage.setItem(StorageKeys.MY_FOODS, JSON.stringify(foods));
+        } catch (e) {
+          console.log("Error saving foods", e);
+        }
+      },
+    
+      getMyFoods: async () => {
+        try {
+          const data = await AsyncStorage.getItem(StorageKeys.MY_FOODS);
+          return data ? JSON.parse(data) : [];
+        } catch (e) {
+          console.log("Error getting foods", e);
+          return [];
+        }
+      },
+    
+      clearMyFoods: async () => {
+        try {
+          await AsyncStorage.removeItem(StorageKeys.MY_FOODS);
+        } catch (e) {
+          console.log("Error clearing foods", e);
+        }
+      },
   };

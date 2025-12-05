@@ -7,6 +7,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -159,12 +160,34 @@ export default function OnboardingScreen() {
                 if (!selectedGender) return;
               
                 try {
-                  await wellnessApi.setGender(selectedGender.toLowerCase());
+                  // 1️⃣ Save gender to ONBOARDING QUIZ API (ensures basicInfo is complete)
+                  const quizPayload = {
+                    gender: selectedGender.toLowerCase(),
+                  };
+              
+                  console.log("📤 [Onboarding] Sending onboarding quiz:", quizPayload);
+                  const quizRes = await wellnessApi.saveOnboardingQuiz(quizPayload);
+                  console.log("✅ [Onboarding] Saved to onboarding quiz:", quizRes);
+              
+                  // 2️⃣ Save gender to PROFILE SETTING API
+                  const genderRes = await wellnessApi.setGender(selectedGender.toLowerCase());
+                  console.log("✅ [Onboarding] Saved to profile settings:", genderRes);
+                  console.log("✅ [Onboarding] Profile updated successfully!");
+              
                   router.back();
-                } catch (error) {
-                  console.log("Error updating gender:", error);
+                } catch (error: any) {
+                  console.error("❌ [Onboarding] Error saving gender:", error);
+                  console.error("❌ [Onboarding] Error response:", error?.response?.data);
+                  
+                  // Show user-friendly error message
+                  const errorMessage = error?.response?.data?.message || 
+                                     error?.message || 
+                                     "Failed to update gender. Please try again.";
+                  
+                  Alert.alert("Error", errorMessage);
                 }
               }}
+              
               
             >
               <Text style={styles.primaryCtaText}>Save</Text>

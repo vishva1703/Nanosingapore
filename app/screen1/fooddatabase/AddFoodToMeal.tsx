@@ -21,94 +21,220 @@ export default function AddFoodToMeal() {
   const params = useLocalSearchParams();
   const { myFoods } = useFood();
   const [searchText, setSearchText] = useState("");
-  const [activeTab, setActiveTab] = useState("mymeals");
-  const [meals, setMeals] = useState<any[]>([]);
-  const [loadingMeals, setLoadingMeals] = useState(false);
-    const fetchMeals = useCallback(async () => {
+  const [activeTab, setActiveTab] = useState("all");
+  
+  // State for "All" tab - Recently Logged
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [loadingRecentLogs, setLoadingRecentLogs] = useState(false);
+  
+  // State for "My food" tab
+  const [myFoodsList, setMyFoodsList] = useState<any[]>([]);
+  const [loadingMyFoods, setLoadingMyFoods] = useState(false);
+  
+  // State for "Save scans" tab
+  const [savedScans, setSavedScans] = useState<any[]>([]);
+  const [loadingSavedScans, setLoadingSavedScans] = useState(false);
+  // Fetch recently logged foods for "All" tab
+  const fetchRecentLogs = useCallback(async () => {
     try {
-      setLoadingMeals(true);
-      const response = await wellnessApi.getMealList({
+      setLoadingRecentLogs(true);
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const response = await wellnessApi.getDashboardRecentLogs({
+        date: today,
+        page: 1,
+        limit: 20
+      } as any);
+
+      console.log("📊 Recent logs response:", JSON.stringify(response, null, 2));
+
+      let logsList: any[] = [];
+      
+      if (response?.data?.list && Array.isArray(response.data.list)) {
+        logsList = response.data.list;
+        console.log("✅ Recent logs loaded:", logsList.length, "items");
+      } else if (response?.data && Array.isArray(response.data)) {
+        logsList = response.data;
+        console.log("✅ Recent logs loaded (direct array):", logsList.length, "items");
+      } else {
+        console.warn("⚠️ Could not find recent logs in response");
+        logsList = [];
+      }
+      
+      // Remove duplicates before setting state
+      const seen = new Set<string>();
+      const uniqueLogs = logsList.filter((item) => {
+        const id = item.id || item.foodId || `${item.name || item.description || ""}_${item.brand || ""}`;
+        if (seen.has(id)) {
+          return false;
+        }
+        seen.add(id);
+        return true;
+      });
+      
+      console.log("✅ Unique recent logs:", uniqueLogs.length, "items (removed", logsList.length - uniqueLogs.length, "duplicates)");
+      setRecentLogs(uniqueLogs);
+    } catch (error: any) {
+      console.error("❌ Error fetching recent logs:", error);
+      setRecentLogs([]);
+    } finally {
+      setLoadingRecentLogs(false);
+    }
+  }, []);
+
+  // Fetch user's saved foods for "My food" tab
+  const fetchMyFoods = useCallback(async () => {
+    try {
+      setLoadingMyFoods(true);
+      const response = await wellnessApi.getFoodList({
         page: 1,
         limit: 50,
         search: searchText.trim()
       });
 
-      console.log("📋 Meal list response:", JSON.stringify(response, null, 2));
-      console.log("📋 Response structure check:", {
-        hasResponse: !!response,
-        responseKeys: response ? Object.keys(response) : [],
-        hasFlag: !!response?.flag,
-        hasMessage: !!response?.message,
-        hasData: !!response?.data,
-        dataKeys: response?.data ? Object.keys(response.data) : [],
-        hasList: !!response?.data?.list,
-        listIsArray: Array.isArray(response?.data?.list),
-        listLength: response?.data?.list?.length,
-      });
+      console.log("🍎 My foods response:", JSON.stringify(response, null, 2));
 
-      let mealsList: any[] = [];
+      // getFoodList already returns an array directly
+      const foodsList = Array.isArray(response) ? response : [];
+      console.log("✅ My foods loaded:", foodsList.length, "items");
       
-      if (response?.data?.list !== undefined) {
-        if (Array.isArray(response.data.list)) {
-          mealsList = response.data.list;
-          console.log("✅ Meals loaded from response.data.list:", mealsList.length, "meals");
-        } else {
-          console.warn("⚠️ response.data.list exists but is not an array:", typeof response.data.list);
+      // Remove duplicates before setting state
+      const seen = new Set<string>();
+      const uniqueFoods = foodsList.filter((item) => {
+        const id = item.id || item.foodId || `${item.name || item.description || ""}_${item.brand || ""}`;
+        if (seen.has(id)) {
+          return false;
         }
-      }
-      else if (response?.data && Array.isArray(response.data)) {
-        mealsList = response.data;
-        console.log("✅ Meals loaded from response.data (direct array):", mealsList.length, "meals");
-      }
-      else if (response?.list && Array.isArray(response.list)) {
-        mealsList = response.list;
-        console.log("✅ Meals loaded from response.list:", mealsList.length, "meals");
-      }
-      else if (Array.isArray(response)) {
-        mealsList = response;
-        console.log("✅ Meals loaded from direct array response:", mealsList.length, "meals");
-      }
-      else if (response?.data?.items && Array.isArray(response.data.items)) {
-        mealsList = response.data.items;
-        console.log("✅ Meals loaded from response.data.items:", mealsList.length, "meals");
-      }
-      else {
-        console.warn("⚠️ Could not find meal list in response");
-        console.warn("⚠️ Full response structure:", JSON.stringify(response, null, 2));
-        mealsList = [];
-      }
+        seen.add(id);
+        return true;
+      });
       
-      console.log("📦 Final meals list:", mealsList.length, "meals");
-      setMeals(mealsList);
+      console.log("✅ Unique my foods:", uniqueFoods.length, "items (removed", foodsList.length - uniqueFoods.length, "duplicates)");
+      setMyFoodsList(uniqueFoods);
     } catch (error: any) {
-      console.error("❌ Error fetching meals:", error);
-      setMeals([]);
+      console.error("❌ Error fetching my foods:", error);
+      setMyFoodsList([]);
     } finally {
-      setLoadingMeals(false);
+      setLoadingMyFoods(false);
     }
   }, [searchText]);
 
+  // Fetch saved scans for "Save scans" tab
+  const fetchSavedScans = useCallback(async () => {
+    try {
+      setLoadingSavedScans(true);
+      // Note: If there's a specific endpoint for saved scans, replace this
+      // For now, using a placeholder - you may need to add this endpoint to wellnessApi
+      console.log("📸 Fetching saved scans...");
+      
+      // TODO: Add API endpoint for saved scans if available
+      // const response = await wellnessApi.getSavedScans({ page: 1, limit: 50 });
+      
+      setSavedScans([]);
+    } catch (error: any) {
+      console.error("❌ Error fetching saved scans:", error);
+      setSavedScans([]);
+    } finally {
+      setLoadingSavedScans(false);
+    }
+  }, []);
+
+  // Reset to "all" tab when page is focused and fetch data
   useFocusEffect(
     useCallback(() => {
-      if (activeTab === "mymeals") {
-        fetchMeals();
-      }
-    }, [activeTab, fetchMeals])
+      setActiveTab("all");
+      fetchRecentLogs();
+    }, [fetchRecentLogs])
   );
 
+  // Fetch data when tab changes
   React.useEffect(() => {
-    if (activeTab === "mymeals") {
+    if (activeTab === "all") {
+      fetchRecentLogs();
+    } else if (activeTab === "myfood") {
+      fetchMyFoods();
+    } else if (activeTab === "savescans") {
+      fetchSavedScans();
+    }
+  }, [activeTab, fetchRecentLogs, fetchMyFoods, fetchSavedScans]);
+
+  // Debounce search for "My food" tab
+  React.useEffect(() => {
+    if (activeTab === "myfood") {
       const timeoutId = setTimeout(() => {
-        fetchMeals();
-      }, 500); 
+        fetchMyFoods();
+      }, 500);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [searchText, activeTab]);
+  }, [searchText, activeTab, fetchMyFoods]);
 
-  const tabs = ["All", "My food", "My meals", "Save scans"];
+  const tabs = ["All", "My food", "Save scans"];
 
-  const filteredMyFoods = myFoods.filter((item: any) => {
+  // Helper function to format servingSize (handles both string and object formats)
+  const formatServingSize = (servingSize: any): string => {
+    if (!servingSize) return "1 serving";
+    if (typeof servingSize === "string") return servingSize;
+    if (typeof servingSize === "object" && servingSize.value !== undefined && servingSize.unit) {
+      return `${servingSize.value} ${servingSize.unit}`;
+    }
+    if (typeof servingSize === "object" && servingSize.value !== undefined) {
+      return `${servingSize.value}`;
+    }
+    return "1 serving";
+  };
+
+  // Helper function to safely convert any value to string for display
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined) return "0";
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return value.toString();
+    if (typeof value === "object" && value.value !== undefined) {
+      return typeof value.value === "number" ? value.value.toString() : String(value.value);
+    }
+    return String(value);
+  };
+
+  // Helper function to extract numeric value from any format
+  const extractNumericValue = (value: any): number => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    if (typeof value === "object" && value.value !== undefined) {
+      const numValue = typeof value.value === "number" ? value.value : parseFloat(value.value);
+      return isNaN(numValue) ? 0 : numValue;
+    }
+    return 0;
+  };
+
+  // Helper function to remove duplicates based on ID
+  const removeDuplicates = (items: any[]): any[] => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const id = item.id || item.foodId || `${item.name || item.description || ""}_${item.brand || ""}`;
+      if (seen.has(id)) {
+        return false;
+      }
+      seen.add(id);
+      return true;
+    });
+  };
+
+  // Filter recent logs for "All" tab (with deduplication)
+  const filteredRecentLogs = removeDuplicates(recentLogs).filter((item: any) => {
+    if (!searchText.trim()) return true;
+    const searchLower = searchText.toLowerCase();
+    return (
+      item.name?.toLowerCase().includes(searchLower) ||
+      item.description?.toLowerCase().includes(searchLower) ||
+      item.brand?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Filter my foods for "My food" tab (with deduplication)
+  const filteredMyFoods = removeDuplicates(myFoodsList).filter((item: any) => {
     if (!searchText.trim()) return true;
     const searchLower = searchText.toLowerCase();
     return (
@@ -119,48 +245,66 @@ export default function AddFoodToMeal() {
   });
 
   const handleAddFood = (food: any) => {
+    // Extract nutrition values properly
+    const extractValue = (val: any): string => {
+      const num = extractNumericValue(val);
+      return num.toString();
+    };
+
     router.push({
       pathname: "/screen1/fooddatabase/CreateMeal",
       params: {
-        addedFoodId: food.id || Date.now().toString(),
-        addedFoodName: food.name || food.description || "",
-        addedFoodDescription: food.description || food.name || "",
-        addedFoodBrand: food.brand || "",
-        addedFoodCalories: food.calories || "0",
-        addedFoodProtein: food.protein || "0",
-        addedFoodCarbs: food.carbs || "0",
-        addedFoodFat: food.fat || "0",
-        addedFoodServingSize: food.servingSize || food.serving || "",
+        addedFoodId: food.id || food.foodId || Date.now().toString(),
+        addedFoodName: formatValue(food.name || food.description || ""),
+        addedFoodDescription: formatValue(food.description || food.name || ""),
+        addedFoodBrand: formatValue(food.brand || ""),
+        addedFoodCalories: extractValue(food.calories),
+        addedFoodProtein: extractValue(food.protein),
+        addedFoodCarbs: extractValue(food.carbs),
+        addedFoodFat: extractValue(food.fat),
+        addedFoodServingSize: typeof food.servingSize === "object" 
+          ? JSON.stringify(food.servingSize) 
+          : formatValue(food.servingSize || food.serving || ""),
       },
     });
   };
 
   const handleViewFood = (food: any) => {
+    // Extract nutrition values properly (handles both number and object formats)
+    const extractValue = (val: any): string => {
+      const num = extractNumericValue(val);
+      return num.toString();
+    };
+
     router.push({
       pathname: "/screen1/fooddatabase/SelectedFood",
       params: {
-        name: food.name || food.description || "",
-        description: food.description || food.name || "",
-        brand: food.brand || "",
-        servingSize: food.servingSize || food.serving || "",
-        servingsPerContainer: food.servingsPerContainer || "",
-        calories: food.calories || "0",
-        protein: food.protein || "0",
-        carbs: food.carbs || "0",
-        fat: food.fat || "0",
-        saturatedFat: food.saturatedFat || "0",
-        polyunsaturatedFat: food.polyunsaturatedFat || "0",
-        monounsaturatedFat: food.monounsaturatedFat || "0",
-        trans: food.trans || "0",
-        cholesterol: food.cholesterol || "0",
-        sodium: food.sodium || "0",
-        sugar: food.sugar || "0",
-        potassium: food.potassium || "0",
-        fiber: food.fiber || "0",
-        vitaminA: food.vitaminA || "0",
-        vitaminC: food.vitaminC || "0",
-        calcium: food.calcium || "0",
-        iron: food.iron || "0",
+        name: formatValue(food.name || food.description || ""),
+        description: formatValue(food.description || food.name || ""),
+        brand: formatValue(food.brand || ""),
+        servingSize: typeof food.servingSize === "object" 
+          ? JSON.stringify(food.servingSize) 
+          : formatValue(food.servingSize || food.serving || ""),
+        servingsPerContainer: extractValue(food.servingsPerContainer),
+        calories: extractValue(food.calories),
+        protein: extractValue(food.protein),
+        carbs: extractValue(food.carbs),
+        fat: extractValue(food.fat),
+        saturatedFat: extractValue(food.saturatedFat),
+        polyunsaturatedFat: extractValue(food.polyunsaturatedFat),
+        monounsaturatedFat: extractValue(food.monounsaturatedFat),
+        trans: extractValue(food.trans),
+        cholesterol: extractValue(food.cholesterol),
+        sodium: extractValue(food.sodium),
+        sugar: extractValue(food.sugar),
+        potassium: extractValue(food.potassium),
+        fiber: extractValue(food.fiber),
+        vitaminA: extractValue(food.vitaminA),
+        vitaminC: extractValue(food.vitaminC),
+        calcium: extractValue(food.calcium),
+        iron: extractValue(food.iron),
+        foodId: food.id || food.foodId || "",
+        fromAddFoodToMeal: "true", // Mark that this is from AddFoodToMeal
       },
     });
   };
@@ -215,40 +359,75 @@ export default function AddFoodToMeal() {
         </View>
         {activeTab === "all" && (
           <View style={styles.contentContainer}>
-            <TouchableOpacity
-              style={styles.aiGeneratorButton}
-              onPress={() => {
-                console.log("AI Generator clicked");
-              }}
-            >
-              <Ionicons name="sparkles-outline" size={RFValue(20)} color="#4B3AAC" />
-              <Text style={styles.aiGeneratorButtonText}>AI generator</Text>
-            </TouchableOpacity>
-            <Text style={styles.sectionTitle}>Select from database</Text>
-            <Text style={styles.emptyText}>Foods will be loaded from database</Text>
-          </View>
-        )}
+            <Text style={styles.sectionTitle}>Recently Logged</Text>
 
-        {activeTab === "myfood" && (
-          <View style={styles.contentContainer}>
-            {filteredMyFoods.length === 0 ? (
-              <Text style={styles.emptyText}>No foods found</Text>
+            {loadingRecentLogs ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#4B3AAC" />
+                <Text style={styles.loadingText}>Loading recent items...</Text>
+              </View>
+            ) : filteredRecentLogs.length === 0 ? (
+              <Text style={styles.emptyText}>No recent items</Text>
             ) : (
-              filteredMyFoods.map((item: any, index: number) => (
+              filteredRecentLogs.map((item: any, index: number) => (
                 <TouchableOpacity
-                  key={index}
+                  key={item.id || item.foodId || index}
                   style={styles.foodItemCard}
                   onPress={() => handleViewFood(item)}
                 >
                   <View style={styles.foodItemContent}>
                     <Text style={styles.foodItemName}>
-                      {item.description || item.name}
-                      {item.brand && ` • ${item.brand}`}
+                      {formatValue(item.description || item.name)}
+                    </Text>
+
+                    <View style={styles.foodItemInfo}>
+                      <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
+                      <Text style={styles.foodItemDetails}>
+                        {formatValue(item.calories)} cal • {formatServingSize(item.servingSize)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.foodItemPlusButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleAddFood(item);
+                    }}
+                  >
+                    <Text style={styles.foodItemPlusText}>+</Text>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        )}
+
+        {activeTab === "myfood" && (
+          <View style={styles.contentContainer}>
+            {loadingMyFoods ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#4B3AAC" />
+                <Text style={styles.loadingText}>Loading your foods...</Text>
+              </View>
+            ) : filteredMyFoods.length === 0 ? (
+              <Text style={styles.emptyText}>No foods found</Text>
+            ) : (
+              filteredMyFoods.map((item: any, index: number) => (
+                <TouchableOpacity
+                  key={item.id || item.foodId || index}
+                  style={styles.foodItemCard}
+                  onPress={() => handleViewFood(item)}
+                >
+                  <View style={styles.foodItemContent}>
+                    <Text style={styles.foodItemName}>
+                      {formatValue(item.description || item.name)}
+                      {item.brand && ` • ${formatValue(item.brand)}`}
                     </Text>
                     <View style={styles.foodItemInfo}>
                       <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
                       <Text style={styles.foodItemDetails}>
-                        {item.calories || "0"} cal • {item.servingSize || "Serving"}
+                        {formatValue(item.calories)} cal • {formatServingSize(item.servingSize)}
                       </Text>
                     </View>
                   </View>
@@ -267,93 +446,46 @@ export default function AddFoodToMeal() {
           </View>
         )}
 
-        {activeTab === "mymeals" && (
-          <View style={styles.contentContainer}>
-            {loadingMeals ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4B3AAC" />
-                <Text style={styles.loadingText}>Loading meals...</Text>
-              </View>
-            ) : meals.length === 0 ? (
-              <Text style={styles.emptyText}>No meals found</Text>
-            ) : (
-              meals
-                .filter((meal: any) => {
-                  if (!searchText.trim()) return true;
-                  const searchLower = searchText.toLowerCase();
-                  const mealName = meal.description || meal.name || "";
-                  return mealName.toLowerCase().includes(searchLower);
-                })
-                .map((meal: any, index: number) => {
-                  const mealCalories = meal.calories || meal.nutrition?.calories || 0;
-                  const mealName = meal.description || meal.name || "Unnamed Meal";
-                  const mealItems = meal.mealItems || meal.items || [];
-                  
-                  return (
-                    <TouchableOpacity
-                      key={meal.id || meal._id || index}
-                      style={styles.foodItemCard}
-                      onPress={() => {
-                        router.push({
-                          pathname: "/screen1/fooddatabase/CreateMeal",
-                          params: {
-                            mealId: meal.id || meal._id,
-                            mealName: mealName,
-                            ...meal,
-                          },
-                        });
-                      }}
-                    >
-                      <View style={styles.foodItemContent}>
-                        <View style={styles.mealHeader}>
-                          <Ionicons name="restaurant-outline" size={RFValue(16)} color="#4B3AAC" />
-                          <Text style={styles.foodItemName}>
-                            {mealName}
-                          </Text>
-                        </View>
-                        <View style={styles.foodItemInfo}>
-                          <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
-                          <Text style={styles.foodItemDetails}>
-                            {Math.round(mealCalories)} cal
-                          </Text>
-                          {mealItems.length > 0 && (
-                            <>
-                              <Text style={styles.foodItemDetails}> • </Text>
-                              <Text style={styles.foodItemDetails}>
-                                {mealItems.length} item{mealItems.length !== 1 ? 's' : ''}
-                              </Text>
-                            </>
-                          )}
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.foodItemPlusButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleAddFood({
-                            id: meal.id || meal._id,
-                            name: mealName,
-                            description: mealName,
-                            calories: String(mealCalories),
-                            protein: String(meal.protein || meal.nutrition?.protein || 0),
-                            carbs: String(meal.carbs || meal.nutrition?.carbs || 0),
-                            fat: String(meal.fat || meal.nutrition?.fat || 0),
-                            type: "meal",
-                          });
-                        }}
-                      >
-                        <Text style={styles.foodItemPlusText}>+</Text>
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  );
-                })
-            )}
-          </View>
-        )}
 
         {activeTab === "savescans" && (
           <View style={styles.contentContainer}>
-            <Text style={styles.emptyText}>No saved scans</Text>
+            {loadingSavedScans ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#4B3AAC" />
+                <Text style={styles.loadingText}>Loading saved scans...</Text>
+              </View>
+            ) : savedScans.length === 0 ? (
+              <Text style={styles.emptyText}>No saved scans</Text>
+            ) : (
+              savedScans.map((item: any, index: number) => (
+                <TouchableOpacity
+                  key={item.id || item.scanId || index}
+                  style={styles.foodItemCard}
+                  onPress={() => handleViewFood(item)}
+                >
+                  <View style={styles.foodItemContent}>
+                    <Text style={styles.foodItemName}>
+                      {formatValue(item.description || item.name || "Scanned Food")}
+                    </Text>
+                    <View style={styles.foodItemInfo}>
+                      <Ionicons name="flame-outline" size={RFValue(14)} color="#666" />
+                      <Text style={styles.foodItemDetails}>
+                        {formatValue(item.calories)} cal • {formatServingSize(item.servingSize)}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.foodItemPlusButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleAddFood(item);
+                    }}
+                  >
+                    <Text style={styles.foodItemPlusText}>+</Text>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         )}
 

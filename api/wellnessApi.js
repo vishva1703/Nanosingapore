@@ -103,6 +103,11 @@ const autoGenerateMacro = async (payload) => {
   return res.data;
 };
 
+const saveOnboardingQuiz = async (payload) => {
+  const res = await client.post("/nutrition-api/auth/onboarding-quiz", payload);
+  return res.data;
+};
+
 /**
  * Dashboard
  */
@@ -123,130 +128,92 @@ const dashboardAutoGenerateMacro = async (payload) => {
   return res.data;
 };
 
-/**
- * Scan (file upload + JSON endpoints)
- * For file uploads we rely on FormData
- */
-const scanFood = async ({ fileUri, date }) => {
-  const fd = new FormData();
-  
-  // Extract filename from URI or use default
-  const getFileName = (uri) => {
-    const uriParts = uri.split('/');
-    const fileName = uriParts[uriParts.length - 1];
-    // Ensure filename has proper extension
-    if (fileName && fileName.includes('.')) {
-      return fileName;
-    }
-    return 'scan.jpg';
-  };
+// 📌 1. Scan Food (Image Upload)
+const scanFood = async (imageUri, date) => {
+  const formData = new FormData();
 
-  // Extract file extension to determine MIME type
-  const getMimeType = (uri) => {
-    const extension = uri.split('.').pop()?.toLowerCase();
-    const mimeTypes = {
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      webp: 'image/webp',
-    };
-    return mimeTypes[extension] || 'image/jpeg';
-  };
+  // In Expo/React Native → MUST remove "file://" for Android uploads
+  const cleanUri =
+    imageUri.startsWith("file://") ? imageUri.replace("file://", "") : imageUri;
 
-  // Prepare file object for FormData
-  // React Native FormData handles file:// URIs automatically on both platforms
-  const fileObject = {
-    uri: fileUri,
-    name: getFileName(fileUri),
-    type: getMimeType(fileUri),
-  };
+  formData.append("file", {
+    uri: imageUri,              
+    name: `food_${Date.now()}.jpg`,
+    type: "image/jpeg",
+  });
 
-  // Append file to FormData with key "file"
-  fd.append("file", fileObject);
-  
-  // Append date if provided
-  if (date) {
-    fd.append("date", date);
-  }
+  formData.append("date", date); 
 
-  // Make POST request to scan food endpoint
-  const res = await client.post("/nutrition-api/scan/food", fd, {
-    headers: { 
+  const res = await client.post("/nutrition-api/scan/food", formData, {
+    headers: {
+      Accept: "application/json",
       "Content-Type": "multipart/form-data",
     },
-    timeout: 60000, // Increase timeout for file uploads
+    timeout: 20000,
   });
-  
+
   return res.data;
 };
 
+// 📌 2. Scan Barcode
 const scanBarcode = async ({ barcode, date }) => {
-  const res = await client.post("/nutrition-api/scan/barcode", { barcode, date });
+  const body = { barcode };
+  if (date) body.date = date;
+  const res = await client.post("/nutrition-api/scan/barcode", body);
   return res.data;
 };
 
-const scanFoodLabel = async ({ fileUri, date }) => {
-  const fd = new FormData();
-  
-  // Extract filename from URI or use default
-  const getFileName = (uri) => {
-    const uriParts = uri.split('/');
-    const fileName = uriParts[uriParts.length - 1];
-    // Ensure filename has proper extension
-    if (fileName && fileName.includes('.')) {
-      return fileName;
-    }
-    return 'label.jpg';
-  };
+// 📌 3. Scan Food Label
+const scanFoodLabel = async (imageUri, date) => {
+  const formData = new FormData();
 
-  // Extract file extension to determine MIME type
-  const getMimeType = (uri) => {
-    const extension = uri.split('.').pop()?.toLowerCase();
-    const mimeTypes = {
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      webp: 'image/webp',
-    };
-    return mimeTypes[extension] || 'image/jpeg';
-  };
+  formData.append("file", {
+    uri: imageUri,
+    name: `label_${Date.now()}.jpg`,
+    type: "image/jpeg",
+  });
 
-  // Prepare file object for FormData
-  // React Native FormData handles file:// URIs automatically on both platforms
-  const fileObject = {
-    uri: fileUri,
-    name: getFileName(fileUri),
-    type: getMimeType(fileUri),
-  };
-
-  // Append file to FormData with key "file"
-  fd.append("file", fileObject);
-  
-  // Append date if provided
+  // Add date parameter if provided
   if (date) {
-    fd.append("date", date);
+    formData.append("date", date);
   }
 
-  // Make POST request to scan food label endpoint
-  const res = await client.post("/nutrition-api/scan/food-label", fd, {
+  const res = await client.post("/nutrition-api/scan/food-label", formData, {
     headers: { 
-      "Content-Type": "multipart/form-data",
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data" 
     },
     timeout: 60000, // Increase timeout for file uploads
   });
-  
+
   return res.data;
 };
 
-const getScanDetail = async ({ scanMealId, logId }) => {
-  const res = await client.post("/nutrition-api/scan/detail", { scanMealId, logId });
+// 📌 4. Get Scan Detail
+const getScanDetail = async (scanId) => {
+  const res = await client.get(`/nutrition-api/scan/detail/${scanId}`);
   return res.data;
 };
 
+// 📌 5. Update Scan Detail
 const updateScanDetail = async (payload) => {
-  const res = await client.post("/nutrition-api/scan/update-detail", payload);
+  const res = await client.post("/nutrition-api/scan/update", payload);
   return res.data;
 };
+
+// 📌 6. Fix Scan Result (Submit corrected food details)
+const fixScanResult = async (payload) => {
+  const res = await client.post("/nutrition-api/scan/fix-result", payload);
+  return res.data;
+};
+
+// 📌 7. Add Ingredient to Scan
+const addIngredient = async (payload) => {
+  const res = await client.post("/nutrition-api/scan/add-ingredient", payload);
+  return res.data;
+};
+
+
 
 /**
  * Profile endpoints (examples)
@@ -458,13 +425,33 @@ const deleteAccount = async () => {
  */
 const addOrUpdateFood = async (foodPayload) => {
   // Transform the payload to match backend expectations
-  const transformedPayload = {
-    ...foodPayload,
-    // Transform servingSize from string to object
-    servingSize: typeof foodPayload.servingSize === 'string' ? {
+  let transformedServingSize = foodPayload.servingSize;
+  
+  // Transform servingSize from string to object
+  if (typeof foodPayload.servingSize === 'string') {
+    transformedServingSize = {
       quantity: parseFloat(foodPayload.servingSize) || 0,
       unit: foodPayload.servingUnit || 'g' // default unit
-    } : foodPayload.servingSize,
+    };
+  }
+  // If servingSize is undefined and it's a meal, provide default
+  else if (!foodPayload.servingSize && foodPayload.type === 'meal') {
+    transformedServingSize = {
+      quantity: 1,
+      unit: 'serving'
+    };
+  }
+  // If servingSize is undefined for regular food, provide default
+  else if (!foodPayload.servingSize) {
+    transformedServingSize = {
+      quantity: 1,
+      unit: 'g'
+    };
+  }
+
+  const transformedPayload = {
+    ...foodPayload,
+    servingSize: transformedServingSize,
     // Ensure servingPerContainer is provided (backend expects this field name)
     servingPerContainer: foodPayload.servingsPerContainer || foodPayload.servingPerContainer || 1
   };
@@ -637,6 +624,8 @@ const deleteMeal = async (mealId) => {
   return res.data;
 };
 
+
+
 /* ---------- Utility - expose client for custom calls ---------- */
 const rawClient = client;
 
@@ -653,6 +642,7 @@ export default {
   signInWithApple,
   logout,
   autoGenerateMacro,
+  saveOnboardingQuiz,
 
   // dashboard
   getDashboard,
@@ -665,6 +655,8 @@ export default {
   scanFoodLabel,
   getScanDetail,
   updateScanDetail,
+  fixScanResult,
+  addIngredient,
 
   // profile
   getProfileDashboard,

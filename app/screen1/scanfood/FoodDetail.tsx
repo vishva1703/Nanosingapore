@@ -1,7 +1,9 @@
+import { useFood } from '@/components/FoodContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     Image,
     ScrollView,
     StyleSheet,
@@ -21,9 +23,11 @@ interface IngredientItem {
 export default function FoodDetail() {
     const router = useRouter();
     const params = useLocalSearchParams();
+    const { addFood } = useFood();
     const [quantity, setQuantity] = useState(1);
     const [ingredients, setIngredients] = useState<string>('');
     const [ingredientsList, setIngredientsList] = useState<IngredientItem[]>([]);
+    const [saving, setSaving] = useState(false);
 
     const getParam = (param: string | string[] | undefined): string => {
         return Array.isArray(param) ? param[0] : (param || '');
@@ -31,20 +35,18 @@ export default function FoodDetail() {
 
     const foodName = getParam(params.name) || 'Chickpea curry';
     const calories = getParam(params.calories) || '300';
+    const caloriesUnit = getParam(params.caloriesUnit) || 'Cal';
+    const carbs = getParam(params.carbs) || '0';
+    const carbsUnit = getParam(params.carbsUnit) || 'g';
+    const protein = getParam(params.protein) || '0';
+    const proteinUnit = getParam(params.proteinUnit) || 'g';
+    const fat = getParam(params.fat) || '0';
+    const fatUnit = getParam(params.fatUnit) || 'g';
     const portion = getParam(params.portion) || '8 oz cooked';
     const imageUri = getParam(params.imageUri);
+    const mode = getParam(params.mode);
 
-    // Update ingredients when returning from Fixresult
-    useEffect(() => {
-        const ingredientsParam = getParam(params.ingredients);
-        if (ingredientsParam && ingredientsParam.trim()) {
-            setIngredients(ingredientsParam);
-            // Clear the param after reading
-            router.setParams({ ingredients: '' } as any);
-        }
-    }, [params.ingredients]);
-
-    // Update ingredients list when returning from SelectedFood
+    // Update ingredients list when returning from AddIngredients (SelectedFood)
     useEffect(() => {
         const ingredientName = getParam(params.ingredientName);
         const ingredientQuantity = getParam(params.ingredientQuantity);
@@ -54,11 +56,22 @@ export default function FoodDetail() {
                 name: ingredientName,
                 quantity: parseInt(ingredientQuantity) || 1,
             };
-            setIngredientsList(prev => [...prev, newIngredient]);
+            // Add the new ingredient at the beginning of the list
+            setIngredientsList(prev => [newIngredient, ...prev]);
             // Clear the params after reading
             router.setParams({ ingredientName: '', ingredientQuantity: '' } as any);
         }
     }, [params.ingredientName, params.ingredientQuantity]);
+
+    // Update ingredients text when returning from Fixresult
+    useEffect(() => {
+        const ingredientsParam = getParam(params.ingredients);
+        if (ingredientsParam && ingredientsParam.trim()) {
+            setIngredients(ingredientsParam);
+            // Clear the param after reading
+            router.setParams({ ingredients: '' } as any);
+        }
+    }, [params.ingredients]);
 
     const handleDecrease = () => {
         if (quantity > 1) {
@@ -70,32 +83,111 @@ export default function FoodDetail() {
         setQuantity(quantity + 1);
     };
 
+    // Calculate adjusted values based on quantity
+    const calculateAdjustedValue = (value: string, unit: string): string => {
+        const numericValue = parseFloat(value) || 0;
+        const adjusted = numericValue * quantity;
+        return `${adjusted}${unit}`;
+    };
+
     const nutritionCards = [
         {
             icon: 'flame-outline',
             label: 'Calories',
-            value: calories,
+            value: calculateAdjustedValue(calories, caloriesUnit),
             color: '#000',
         },
         {
             icon: 'nutrition-outline',
             label: 'Carbs',
-            value: '45g',
+            value: calculateAdjustedValue(carbs, carbsUnit),
             color: '#F59E0B',
         },
         {
             icon: 'fitness-outline',
             label: 'Protein',
-            value: '25g',
+            value: calculateAdjustedValue(protein, proteinUnit),
             color: '#EF4444',
         },
         {
             icon: 'water-outline',
             label: 'Fat',
-            value: '20g',
+            value: calculateAdjustedValue(fat, fatUnit),
             color: '#10B981',
         },
     ];
+
+    // Function to add an ingredient to the beginning of the list
+    const addIngredientToTop = (name: string, quantity: number) => {
+        const newIngredient: IngredientItem = { name, quantity };
+        setIngredientsList(prev => [newIngredient, ...prev]);
+    };
+
+    const handleDone = async () => {
+        try {
+            setSaving(true);
+            
+            // Prepare food data object
+            const foodData = {
+                id: `food_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: foodName,
+                calories: `${parseFloat(calories) * quantity}${caloriesUnit}`,
+                protein: `${parseFloat(protein) * quantity}${proteinUnit}`,
+                carbs: `${parseFloat(carbs) * quantity}${carbsUnit}`,
+                fat: `${parseFloat(fat) * quantity}${fatUnit}`,
+                servingSize: portion,
+                cookedType: portion, // Using portion as cookedType for display
+                description: ingredients || '',
+                // Combine all ingredients into description
+                ingredients: ingredientsList.length > 0 
+                    ? ingredientsList.map(item => `${item.name} (Qty: ${item.quantity})`).join(', ')
+                    : ingredients,
+                imageUri: imageUri || '',
+                quantity: quantity,
+                mode: mode || 'scan',
+            };
+
+            console.log('💾 Saving food data:', foodData);
+
+            // Add to FoodContext
+            addFood(foodData);
+
+            // Optionally save to API if you have an endpoint
+            // try {
+            //     await wellnessApi.addOrUpdateFood(foodData);
+            // } catch (apiError) {
+            //     console.warn('API save failed, but food saved locally:', apiError);
+            // }
+
+            Alert.alert(
+                'Success',
+                `${foodName} has been saved to your food database!`,
+                [
+                    {
+                        text: 'View Database',
+                        onPress: () => {
+                            router.push({
+                                pathname: '/screen1/fooddatabase/save',
+                                params: { tab: 'all' }
+                            });
+                        }
+                    },
+                    {
+                        text: 'OK',
+                        onPress: () => router.back()
+                    }
+                ]
+            );
+        } catch (error: any) {
+            console.error('Error saving food:', error);
+            Alert.alert(
+                'Error',
+                'Failed to save food. Please try again.'
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -172,7 +264,7 @@ export default function FoodDetail() {
                         <View style={styles.healthScoreHeader}>
                             <Ionicons name="heart" size={RFValue(20)} color="#EF4444" />
                             <Text style={styles.healthScoreTitle}>Health Score</Text> 
-                             <Text style={styles.healthScoreValue}>7/10</Text>
+                            <Text style={styles.healthScoreValue}>7/10</Text>
                         </View>
                         <View style={styles.healthScoreBar}>
                             <View style={styles.healthScoreFill} />
@@ -182,54 +274,44 @@ export default function FoodDetail() {
                     {/* Ingredients Section */}
                     <View style={styles.ingredientsSection}>
                         <Text style={styles.sectionTitle}>Ingredients</Text>
-                        {ingredientsList.length > 0 ? (
-                            <View style={styles.ingredientsListWrapper}>
-                                {ingredientsList.map((item, index) => (
-                                    <View key={index} style={styles.ingredientItemCard}>
+                        
+                        {/* Ingredients Cards Row - Show original ingredients + added ingredients + Add button */}
+                        <View style={styles.ingredientsListWrapper}>
+                            {/* Original Ingredients from Image Scan - Parse and show as individual cards */}
+                            {ingredients && ingredients.trim() && (() => {
+                                // Parse ingredients string (comma-separated) into individual items
+                                const originalIngredientsArray = ingredients
+                                    .split(',')
+                                    .map(ing => ing.trim())
+                                    .filter(ing => ing.length > 0);
+                                
+                                return originalIngredientsArray.map((ingredient, index) => (
+                                    <View key={`original-${index}`} style={styles.ingredientItemCard}>
                                         <View style={styles.ingredientItemContent}>
-                                            <Text style={styles.ingredientItemName} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
-                                            <Text style={styles.ingredientItemQuantity}>Qty: {item.quantity}</Text>
+                                            <Text style={styles.ingredientItemName} numberOfLines={2} ellipsizeMode="tail">
+                                                {ingredient}
+                                            </Text>
+                                            <Text style={styles.ingredientItemQuantity}>{portion}</Text>
                                         </View>
                                     </View>
-                                ))}
-                                <TouchableOpacity 
-                                    style={styles.addIngredientsButton}
-                                    onPress={() => {
-                                        const queryParams = new URLSearchParams();
-                                        if (foodName) queryParams.append('name', foodName);
-                                        if (calories) queryParams.append('calories', calories);
-                                        if (portion) queryParams.append('portion', portion);
-                                        if (imageUri) queryParams.append('imageUri', imageUri);
-                                        queryParams.append('originalName', foodName);
-                                        router.push(`/screen1/scanfood/AddIngredients?${queryParams.toString()}`);
-                                    }}
-                                >
-                                    <Ionicons name="add" size={RFValue(20)} color="#4B3AAC" />
-                                    <Text style={styles.addIngredientsButtonText}>Add</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : ingredients ? (
-                            <View style={styles.ingredientsListContainer}>
-                                <View style={styles.ingredientsContent}>
-                                    <Text style={styles.ingredientsText}>{ingredients}</Text>
+                                ));
+                            })()}
+                            
+                            {/* Added Ingredients Cards from AddIngredients - Show alongside original */}
+                            {ingredientsList.map((item, index) => (
+                                <View key={`added-${index}`} style={styles.ingredientItemCard}>
+                                    <View style={styles.ingredientItemContent}>
+                                        <Text style={styles.ingredientItemName} numberOfLines={2} ellipsizeMode="tail">
+                                            {item.name}
+                                        </Text>
+                                        <Text style={styles.ingredientItemQuantity}>
+                                            {item.quantity} {item.quantity === 1 ? 'cup' : 'cups'}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <TouchableOpacity 
-                                    style={styles.addIngredientsButton}
-                                    onPress={() => {
-                                        const queryParams = new URLSearchParams();
-                                        if (foodName) queryParams.append('name', foodName);
-                                        if (calories) queryParams.append('calories', calories);
-                                        if (portion) queryParams.append('portion', portion);
-                                        if (imageUri) queryParams.append('imageUri', imageUri);
-                                        queryParams.append('originalName', foodName);
-                                        router.push(`/screen1/scanfood/AddIngredients?${queryParams.toString()}`);
-                                    }}
-                                >
-                                    <Ionicons name="add" size={RFValue(20)} color="#4B3AAC" />
-                                    <Text style={styles.addIngredientsButtonText}>Add</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : (
+                            ))}
+                            
+                            {/* Add Button Card - Always visible */}
                             <TouchableOpacity 
                                 style={styles.addIngredientsCard}
                                 onPress={() => {
@@ -238,6 +320,7 @@ export default function FoodDetail() {
                                     if (calories) queryParams.append('calories', calories);
                                     if (portion) queryParams.append('portion', portion);
                                     if (imageUri) queryParams.append('imageUri', imageUri);
+                                    if (mode) queryParams.append('mode', mode);
                                     queryParams.append('originalName', foodName);
                                     router.push(`/screen1/scanfood/AddIngredients?${queryParams.toString()}`);
                                 }}
@@ -245,7 +328,7 @@ export default function FoodDetail() {
                                 <Text style={styles.addIngredientsText}>Add</Text>
                                 <Ionicons name="add" size={RFValue(32)} color="#4B3AAC" />
                             </TouchableOpacity>
-                        )}
+                        </View>
                     </View>
                 </View>
 
@@ -265,8 +348,14 @@ export default function FoodDetail() {
                         <Ionicons name="sparkles-outline" size={RFValue(20)} color="#4B3AAC" />
                         <Text style={styles.fixResultsText}>Fix Results</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.doneButton}>
-                        <Text style={styles.doneButtonText}>Done</Text>
+                    <TouchableOpacity 
+                        style={[styles.doneButton, saving && styles.doneButtonDisabled]}
+                        onPress={handleDone}
+                        disabled={saving}
+                    >
+                        <Text style={styles.doneButtonText}>
+                            {saving ? 'Saving...' : 'Done'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -459,17 +548,23 @@ const styles = StyleSheet.create({
         borderRadius: wp('4%'),
         borderWidth: 1,
         borderColor: '#E5E7EB',
-        padding: wp('4%'),
-        marginHorizontal: wp('28%'),
+        paddingHorizontal: wp('3%'),
+        paddingVertical: hp('2%'),
+        width: '31%',
+        minHeight: hp('12%'),
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: hp('8%'),
-        right: wp('28%'),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
     },
     addIngredientsText: {
         fontSize: RFValue(14),
         color: '#666',
-        marginBottom: hp('1%'),
+        marginBottom: hp('0.5%'),
+        textAlign: 'center',
     },
     ingredientsListContainer: {
         flexDirection: 'row',
@@ -502,7 +597,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp('3%'),
         paddingVertical: hp('1.5%'),
         gap: wp('1%'),
-        width: '31%',
+        width: '100%',
         minHeight: hp('8%'),
     },
     addIngredientsButtonText: {
@@ -514,35 +609,42 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: wp('2%'),
+        marginBottom: hp('1%'),
     },
     ingredientItemCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         backgroundColor: '#fff',
         borderRadius: wp('4%'),
         borderWidth: 1,
-        borderColor: '#4B3AAC',
+        borderColor: '#E5E7EB',
         paddingHorizontal: wp('3%'),
-        paddingVertical: hp('1.5%'),
+        paddingVertical: hp('2%'),
         width: '31%',
-        minHeight: hp('8%'),
+        minHeight: hp('12%'),
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
     },
     ingredientItemContent: {
-        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
     },
     ingredientItemName: {
-        fontSize: RFValue(14),
+        fontSize: RFValue(13),
         fontWeight: '600',
         color: '#111',
-        marginBottom: hp('0.3%'),
+        textAlign: 'center',
+        marginBottom: hp('0.5%'),
+        lineHeight: RFValue(18),
     },
     ingredientItemQuantity: {
         fontSize: RFValue(12),
         color: '#666',
-    },
-    deleteIngredientButton: {
-        padding: wp('1%'),
+        textAlign: 'center',
     },
     bottomButtons: {
         flexDirection: 'row',
@@ -556,7 +658,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#F9FAFB',
-        
         paddingVertical: hp('2%'),
         borderRadius: wp('8%'),
         gap: wp('2%'),
@@ -574,10 +675,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    doneButtonDisabled: {
+        opacity: 0.6,
+    },
     doneButtonText: {
         fontSize: RFValue(14),
         fontWeight: '600',
         color: '#fff',
     },
 });
-

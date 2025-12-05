@@ -62,11 +62,20 @@ export default function CreateMeal() {
                 servingSize: getParam(params.addedFoodServingSize) || "",
             };
 
+            console.log("➕ Adding food item to meal:", {
+                id: foodItem.id,
+                name: foodItem.name,
+                calories: foodItem.calories,
+            });
+
             // Check if item already exists
             setMealItems(prev => {
                 const exists = prev.some(item => item.id === foodItem.id);
                 if (!exists) {
+                    console.log("✅ Food item added. Total items:", prev.length + 1);
                     return [...prev, foodItem];
+                } else {
+                    console.log("⚠️ Food item already exists, skipping");
                 }
                 return prev;
             });
@@ -149,6 +158,19 @@ export default function CreateMeal() {
 
     const isCreateMealEnabled = mealName.trim().length > 0 && mealItems.length > 0;
 
+    // Debug: Log when button state changes
+    useEffect(() => {
+        if (__DEV__) {
+            console.log("🔘 Create Meal Button State:", {
+                enabled: isCreateMealEnabled,
+                mealName: mealName.trim(),
+                mealNameLength: mealName.trim().length,
+                mealItemsCount: mealItems.length,
+                mealItems: mealItems.map(item => ({ id: item.id, name: item.name || item.description }))
+            });
+        }
+    }, [isCreateMealEnabled, mealName, mealItems]);
+
     // Handle create meal action
     const handleCreateMeal = async () => {
         if (!mealName.trim() || mealItems.length === 0) {
@@ -158,63 +180,129 @@ export default function CreateMeal() {
 
         try {
             setLoading(true);
-
-            // Prepare meal payload for API
-            // Structure it as a meal with items
-            const mealPayload: any = {
-                description: mealName.trim(),
-                brand: undefined, // Meals don't have brands
-                type: "meal", // Mark as meal type
-                servingSize: undefined,
-                servingsPerContainer: undefined,
-                // Total nutrition values
-                calories: totalNutrition.calories,
-                protein: totalNutrition.protein,
-                carbs: totalNutrition.carbs,
-                fat: totalNutrition.fat,
-                // Meal items - array of food IDs and servings
-                mealItems: mealItems.map(item => ({
-                    foodId: item.id,
-                    name: item.name || item.description,
-                    description: item.description,
-                    brand: item.brand,
-                    calories: parseFloat(item.calories || "0"),
-                    protein: parseFloat(item.protein || "0"),
-                    carbs: parseFloat(item.carbs || "0"),
-                    fat: parseFloat(item.fat || "0"),
-                    servingSize: item.servingSize,
-                })),
-            };
-
-            // Remove undefined values
-            Object.keys(mealPayload).forEach(key => {
-                if (mealPayload[key] === undefined) {
-                    delete mealPayload[key];
-                }
+            console.log("🍽️ Creating meal with:", {
+                name: mealName.trim(),
+                itemsCount: mealItems.length,
+                totalCalories: totalNutrition.calories,
+                totalProtein: totalNutrition.protein,
             });
 
-            console.log("📝 Saving meal to backend:", mealPayload);
+            // Prepare meal payload for API
+            // Structure it according to the meal API endpoint format
+            const mealPayload: any = {
+                mealName: mealName.trim(), // Use mealName instead of description
+                // Calories in object format {value, unit}
+                calories: {
+                    value: Math.round(totalNutrition.calories),
+                    unit: "Cal"
+                },
+                // Macronutrients in object format
+                macronutrients: {
+                    protein: {
+                        value: Math.round(totalNutrition.protein),
+                        unit: "g"
+                    },
+                    carbs: {
+                        value: Math.round(totalNutrition.carbs),
+                        unit: "g"
+                    },
+                    fats: {
+                        value: Math.round(totalNutrition.fat),
+                        unit: "g"
+                    }
+                },
+                // Meal items - array of food items
+                mealItems: mealItems.map(item => {
+                    // Handle servingSize for meal items
+                    let itemServingSize: any = { quantity: 1, unit: "serving" };
+                    if (item.servingSize) {
+                        if (typeof item.servingSize === "string") {
+                            // Try to parse string servingSize
+                            const parsed = parseFloat(item.servingSize);
+                            if (!isNaN(parsed)) {
+                                itemServingSize = { quantity: parsed, unit: "serving" };
+                            }
+                        } else if (typeof item.servingSize === "object" && item.servingSize.quantity !== undefined) {
+                            itemServingSize = item.servingSize;
+                        }
+                    }
 
-            // Call API to add/update meal
-            const apiResponse = await wellnessApi.addOrUpdateFood(mealPayload);
+                    return {
+                        foodId: item.id,
+                        name: item.name || item.description,
+                        description: item.description || item.name,
+                        brand: item.brand || "",
+                        calories: parseFloat(item.calories || "0"),
+                        protein: parseFloat(item.protein || "0"),
+                        carbs: parseFloat(item.carbs || "0"),
+                        fat: parseFloat(item.fat || "0"),
+                        servingSize: itemServingSize,
+                    };
+                }),
+            };
+
+            // Clean up payload - remove empty strings and ensure all values are valid
+            const cleanedPayload: any = {
+                mealName: mealPayload.mealName,
+                calories: mealPayload.calories,
+                macronutrients: mealPayload.macronutrients,
+                mealItems: mealPayload.mealItems.map((item: any) => {
+                    const cleanedItem: any = {
+                        foodId: item.foodId,
+                        name: item.name || "",
+                        description: item.description || item.name || "",
+                        calories: item.calories || 0,
+                        protein: item.protein || 0,
+                        carbs: item.carbs || 0,
+                        fat: item.fat || 0,
+                        servingSize: item.servingSize,
+                    };
+                    // Only include brand if it's not empty
+                    if (item.brand && item.brand.trim()) {
+                        cleanedItem.brand = item.brand;
+                    }
+                    return cleanedItem;
+                }),
+            };
+
+            console.log("📝 Saving meal to backend:", JSON.stringify(cleanedPayload, null, 2));
+
+            // Call API to add/update meal using the meal-specific endpoint
+            const apiResponse = await wellnessApi.addUpdateMeal(cleanedPayload);
 
             console.log("✅ Meal saved to backend:", apiResponse);
 
             // Extract meal ID from API response
             const mealId = apiResponse?.data?.id ||
                           apiResponse?.data?.foodId ||
+                          apiResponse?.data?.mealId ||
                           apiResponse?.id ||
                           apiResponse?.foodId ||
+                          apiResponse?.mealId ||
                           Date.now().toString();
+
+            console.log("✅ Meal created successfully with ID:", mealId);
+            console.log("✅ Meal details:", {
+                name: mealName.trim(),
+                itemsCount: mealItems.length,
+                totalCalories: totalNutrition.calories,
+            });
 
             Alert.alert(
                 "Success",
-                "Meal created successfully!",
+                `Meal "${mealName.trim()}" created successfully!`,
                 [
                     {
                         text: "OK",
                         onPress: () => {
-                            router.back();
+                            // Navigate to save.tsx with "My meals" tab active
+                            // This will automatically refresh the meal list
+                            router.push({
+                                pathname: "/screen1/fooddatabase/save",
+                                params: {
+                                    tab: "mymeals",
+                                },
+                            });
                         }
                     }
                 ]

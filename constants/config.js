@@ -24,5 +24,4 @@ export const API_CONFIG = {
       UPDATE_MACRO: '/dashboard/update-macro-goal',
       THIRD_PARTY: '/dashboard/store-third-party-data',
     },
-    // Add other endpoints as needed
   };

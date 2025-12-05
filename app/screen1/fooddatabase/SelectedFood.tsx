@@ -1,7 +1,10 @@
+import wellnessApi from "@/api/wellnessApi";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -28,6 +31,7 @@ export default function SelectedFood() {
   const [inputType, setInputType] = useState<"decimal" | "fraction">("decimal");
   const [selectedNumber, setSelectedNumber] = useState(4);
   const [selectedFraction, setSelectedFraction] = useState("1/3");
+  const [loading, setLoading] = useState(false);
   
   const numbersList = Array.from({ length: 20 }, (_, i) => i + 1);
   const fractions = ["1/8", "1/6", "1/4", "1/3", "1/2", "2/3", "3/4"];
@@ -60,6 +64,7 @@ export default function SelectedFood() {
   };
   
   const fromAddIngredients = getParam(params.fromAddIngredients) === 'true';
+  const fromAddFoodToMeal = getParam(params.fromAddFoodToMeal) === 'true';
   
   const measurement = getParam(params.servingSize) || "30g";
   
@@ -363,8 +368,9 @@ export default function SelectedFood() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.logButton}
-            onPress={() => {
+            style={[styles.logButton, loading && styles.logButtonDisabled]}
+            disabled={loading}
+            onPress={async () => {
               if (fromAddIngredients) {
                 const originalName = getParam(params.originalName) || '';
                 const imageUri = getParam(params.imageUri) || '';
@@ -377,14 +383,125 @@ export default function SelectedFood() {
                 queryParams.append('ingredientCalories', food.calories || '0');
                 
                 router.push(`/screen1/scanfood/FoodDetail?${queryParams.toString()}`);
+              } else if (fromAddFoodToMeal) {
+                // Navigate back to CreateMeal with food details
+                router.push({
+                  pathname: "/screen1/fooddatabase/CreateMeal",
+                  params: {
+                    addedFoodId: getParam(params.id) || getParam(params.foodId) || Date.now().toString(),
+                    addedFoodName: food.name || food.description || "",
+                    addedFoodDescription: food.description || food.name || "",
+                    addedFoodBrand: food.brand || "",
+                    addedFoodCalories: food.calories || "0",
+                    addedFoodProtein: food.protein || "0",
+                    addedFoodCarbs: food.carbs || "0",
+                    addedFoodFat: food.fat || "0",
+                    addedFoodServingSize: food.servingSize || "",
+                  },
+                });
               } else {
-                console.log("Log food:", food);
+                // Save food as a meal and navigate to save.tsx with "My meals" tab
+                try {
+                  setLoading(true);
+                  
+                  // Helper to extract numeric value
+                  const extractValue = (val: any): number => {
+                    if (val === null || val === undefined) return 0;
+                    if (typeof val === "number") return val;
+                    if (typeof val === "string") {
+                      const parsed = parseFloat(val);
+                      return isNaN(parsed) ? 0 : parsed;
+                    }
+                    if (typeof val === "object" && val.value !== undefined) {
+                      const numValue = typeof val.value === "number" ? val.value : parseFloat(val.value);
+                      return isNaN(numValue) ? 0 : numValue;
+                    }
+                    return 0;
+                  };
+
+                  // Helper to format servingSize properly
+                  const formatServingSize = (servingSize: any): { quantity: number; unit: string } => {
+                    if (!servingSize) {
+                      return { quantity: 1, unit: "serving" };
+                    }
+                    if (typeof servingSize === "string") {
+                      // Try to parse JSON string first
+                      try {
+                        const parsed = JSON.parse(servingSize);
+                        if (parsed && typeof parsed === "object" && parsed.quantity !== undefined) {
+                          return { quantity: parsed.quantity || 1, unit: parsed.unit || "serving" };
+                        }
+                      } catch (e) {
+                        // Not JSON, try to parse as number
+                        const parsed = parseFloat(servingSize);
+                        if (!isNaN(parsed)) {
+                          return { quantity: parsed, unit: "serving" };
+                        }
+                      }
+                      return { quantity: 1, unit: "serving" };
+                    }
+                    if (typeof servingSize === "object" && servingSize.quantity !== undefined) {
+                      return {
+                        quantity: typeof servingSize.quantity === "number" ? servingSize.quantity : parseFloat(servingSize.quantity) || 1,
+                        unit: servingSize.unit || "serving"
+                      };
+                    }
+                    return { quantity: 1, unit: "serving" };
+                  };
+
+                  // Prepare meal payload
+                  const mealPayload: any = {
+                    description: food.description || food.name || "Meal",
+                    brand: food.brand || undefined,
+                    type: "meal",
+                    calories: extractValue(food.calories) * servings,
+                    protein: extractValue(food.protein) * servings,
+                    carbs: extractValue(food.carbs) * servings,
+                    fat: extractValue(food.fat) * servings,
+                    servingSize: formatServingSize(food.servingSize),
+                    servingsPerContainer: 1,
+                  };
+
+                  // Remove undefined values (but keep servingSize as it's required)
+                  Object.keys(mealPayload).forEach(key => {
+                    if (mealPayload[key] === undefined && key !== "servingSize") {
+                      delete mealPayload[key];
+                    }
+                  });
+
+                  console.log("📝 Saving food as meal:", mealPayload);
+
+                  // Save meal to backend
+                  await wellnessApi.addOrUpdateFood(mealPayload);
+
+                  console.log("✅ Meal saved successfully");
+
+                  // Navigate to save.tsx with "My meals" tab active
+                  router.push({
+                    pathname: "/screen1/fooddatabase/save",
+                    params: {
+                      tab: "mymeals",
+                    },
+                  });
+                } catch (error: any) {
+                  console.error("❌ Error saving meal:", error);
+                  Alert.alert(
+                    "Error",
+                    error?.response?.data?.message || error?.message || "Failed to save meal. Please try again."
+                  );
+                } finally {
+                  setLoading(false);
+                }
               }
             }}
           >
-            <Text style={styles.logButtonText}>
-              {fromAddIngredients ? 'Done' : 'Log'}
-            </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.logButtonText}>
+                {fromAddIngredients ? 'Done' : fromAddFoodToMeal ? 'Add to meal' : 'Log'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -865,6 +982,11 @@ header: {
     paddingVertical: hp("1.8%"),
     borderRadius: wp("10%"),
     alignItems: "center",
+  },
+
+  logButtonDisabled: {
+    backgroundColor: "#D1CEDA",
+    opacity: 0.7,
   },
 
   logButtonText: {

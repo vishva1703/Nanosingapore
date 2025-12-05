@@ -30,7 +30,6 @@ const RunScreen = () => {
   const [loading, setLoading] = useState(false);
   const { addActivity, setIsAnalyzing } = useActivity();
 
-  // Get activity type from params or default to "Run"
   const activityType = typeof type === 'string' ? type : 'Run';
   
   const intensityTitle = (selected: boolean): TextStyle => ({
@@ -40,13 +39,12 @@ const RunScreen = () => {
     marginTop: 8,
   });
 
-  // Dynamic content based on activity type
   const getActivityConfig = (type: string) => {
     switch (type) {
       case "WeightLifting":
         return {
           title: "WeightLifting",
-          icon: require("../../assets/images/weight lifting.png"), // Add this image
+          icon: require("../../assets/images/weight lifting.png"), 
           intensityLabels: {
             high: "Heavy Lifting",
             medium: "Moderate Weights", 
@@ -80,7 +78,6 @@ const RunScreen = () => {
   const activityConfig = getActivityConfig(activityType);
   const durationOptions = [15, 30, 60, 90];
 
-  // Map intensity number to API string format
   const getIntensityString = (intensityValue: number): string => {
     switch (intensityValue) {
       case 0:
@@ -94,9 +91,8 @@ const RunScreen = () => {
     }
   };
 
-  // Calculate calories based on activity type and intensity
   const calculateCalories = () => {
-    const baseCalories = activityType === "WeightLifting" ? 4 : 8; // Weight lifting burns fewer calories per minute
+    const baseCalories = activityType === "WeightLifting" ? 4 : 8; 
     const intensityMultiplier = intensity === 2 ? 1.5 : intensity === 1 ? 1.2 : 1;
     return Math.round(baseCalories * duration * intensityMultiplier);
   };
@@ -128,7 +124,6 @@ const RunScreen = () => {
 >
 
         <Text style={styles.sectionTitle}>Set Intensity</Text>
-
         <View style={styles.intensityCard}>
           <View style={styles.intensityTextBlock}>
             <Text style={intensityTitle(intensity === 2)}>
@@ -137,14 +132,12 @@ const RunScreen = () => {
             <Text style={styles.intensityDesc} numberOfLines={1} ellipsizeMode="tail">
               {activityConfig.intensityDescriptions.high}
             </Text>
-
             <Text style={intensityTitle(intensity === 1)}>
               {activityConfig.intensityLabels.medium}
             </Text>
             <Text style={styles.intensityDesc} numberOfLines={1} ellipsizeMode="tail">
               {activityConfig.intensityDescriptions.medium}
             </Text>
-
             <Text style={intensityTitle(intensity === 0)}>
               {activityConfig.intensityLabels.low}
             </Text>
@@ -169,7 +162,6 @@ const RunScreen = () => {
         </View>
 
         <Text style={styles.sectionTitle}>Duration</Text>
-
         <View style={styles.durationRow}>
           {durationOptions.map((item) => (
             <TouchableOpacity
@@ -208,13 +200,9 @@ const RunScreen = () => {
           try {
             setLoading(true);
             setIsAnalyzing(true);
-            
-            // Get current date and time
             const now = new Date();
             const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            
-            // Map intensity to API format
             const intensityString = getIntensityString(intensity);
             
             console.log("🏃 Logging exercise to backend:", {
@@ -224,7 +212,6 @@ const RunScreen = () => {
               date: currentDate
             });
             
-            // Call appropriate API endpoint based on activity type
             let apiResponse;
             const requestPayload = {
               intensity: intensityString,
@@ -237,16 +224,12 @@ const RunScreen = () => {
             if (activityType === "WeightLifting") {
               apiResponse = await (wellnessApi.logWeightLifting as any)(requestPayload);
             } else {
-              // Default to Run
               apiResponse = await (wellnessApi.logRun as any)(requestPayload);
             }
             
             console.log("📥 [RunScreen] Full API Response:", JSON.stringify(apiResponse, null, 2));
             console.log("📥 [RunScreen] Response type:", typeof apiResponse);
             console.log("📥 [RunScreen] Response keys:", apiResponse ? Object.keys(apiResponse) : 'null');
-            
-            // Verify response indicates success
-            // Success indicators: flag === true, success === true, or presence of data/logId
             const hasSuccessFlag = apiResponse?.flag === true;
             const hasSuccessProperty = apiResponse?.success === true;
             const hasData = !!apiResponse?.data;
@@ -282,6 +265,43 @@ const RunScreen = () => {
             
             if (!isSuccess) {
               console.warn("⚠️ [RunScreen] API response indicates failure:", apiResponse);
+              
+              // Check if error is related to basicInfo (user profile incomplete)
+              const apiErrorMessage = apiResponse?.message || apiResponse?.error || "Unknown error";
+              const isBasicInfoError = apiErrorMessage?.toLowerCase().includes('basicinfo') || 
+                                      apiErrorMessage?.toLowerCase().includes('basic info') ||
+                                      apiErrorMessage?.toLowerCase().includes('basicinf');
+              
+              if (isBasicInfoError) {
+                console.error("❌ [RunScreen] ERROR: User profile (basicInfo) is incomplete or missing");
+                console.error("❌ [RunScreen] The backend needs user profile data to calculate calories");
+                
+                // Show alert and exit early
+                Alert.alert(
+                  "Profile Incomplete ⚠️",
+                  "Please complete your profile information (height, weight, date of birth, gender) before logging exercises.\n\nThis information is needed to calculate calories burned.",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                      onPress: () => {
+                        setLoading(false);
+                        setIsAnalyzing(false);
+                      }
+                    },
+                    {
+                      text: "Go to Profile",
+                      onPress: () => {
+                        setLoading(false);
+                        setIsAnalyzing(false);
+                        router.push('/screen1/profile/profiledetails');
+                      }
+                    }
+                  ]
+                );
+                return; // Exit early, don't proceed with logging
+              }
+              
               const errorMsg = apiResponse?.error || 
                              (apiResponse?.message && !hasSuccessFlag && !hasSuccessMessage ? apiResponse.message : null) ||
                              "Unknown error";

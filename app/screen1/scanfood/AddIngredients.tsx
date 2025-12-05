@@ -1,3 +1,4 @@
+import wellnessApi from '@/api/wellnessApi';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -11,7 +12,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
@@ -48,20 +49,52 @@ export default function AddIngredients() {
         item.name.toLowerCase().includes(searchText.toLowerCase())
     );
 
-    const handleAddItem = (item: FoodItem) => {
+    const handleAddItem = async (item: FoodItem) => {
         // Toggle selection
         const newSelectedItems = new Set(selectedItems);
         if (newSelectedItems.has(item.id)) {
             newSelectedItems.delete(item.id);
         } else {
             newSelectedItems.add(item.id);
+            
+            // Call addIngredient API when item is selected
+            try {
+                const name = getParam(params.name) || '';
+                const imageUri = getParam(params.imageUri) || '';
+                const mode = getParam(params.mode) || 'scan';
+                const date = getParam(params.date) || new Date().toISOString().split('T')[0];
+                
+                const payload = {
+                    ingredientName: item.name,
+                    ingredientCalories: item.calories,
+                    ingredientServing: item.serving,
+                    foodName: name,
+                    imageUri: imageUri,
+                    mode: mode,
+                    date: date,
+                };
+                
+                console.log("🔧 Calling addIngredient API...", payload);
+                const response = await wellnessApi.addIngredient(payload);
+                console.log("✅ Ingredient added successfully:", response);
+            } catch (error: any) {
+                console.error("❌ Failed to add ingredient:", error);
+                console.error("❌ Error details:", {
+                    message: error?.message,
+                    response: error?.response?.data,
+                    status: error?.response?.status
+                });
+                // Don't show alert here - just log the error
+                // The ingredient selection will still proceed
+            }
+            
             // Show modal when item is selected
             setShowFoodLoggedModal(true);
         }
         setSelectedItems(newSelectedItems);
     };
 
-    const handleView = () => {
+    const handleView = async () => {
         setShowFoodLoggedModal(false);
         // Navigate to SelectedFood with selected ingredient data
         const name = getParam(params.name) || '';
@@ -77,6 +110,29 @@ export default function AddIngredients() {
             : null;
         
         if (selectedItem) {
+            // Ensure ingredient is added via API before navigation
+            try {
+                const mode = getParam(params.mode) || 'scan';
+                const date = getParam(params.date) || new Date().toISOString().split('T')[0];
+                
+                const payload = {
+                    ingredientName: selectedItem.name,
+                    ingredientCalories: selectedItem.calories,
+                    ingredientServing: selectedItem.serving,
+                    foodName: name,
+                    imageUri: imageUri,
+                    mode: mode,
+                    date: date,
+                };
+                
+                console.log("🔧 Calling addIngredient API before navigation...", payload);
+                await wellnessApi.addIngredient(payload);
+                console.log("✅ Ingredient added successfully before navigation");
+            } catch (error: any) {
+                console.warn("⚠️ Failed to add ingredient before navigation:", error);
+                // Continue with navigation even if API call fails
+            }
+            
             const queryParams = new URLSearchParams();
             // Use ingredient name as description/name
             queryParams.append('name', selectedItem.name);
